@@ -108,7 +108,7 @@ async def send_coinos_escrow_invoice(context, order_id, order_side, seller_id, a
                 f"کارمزد {fee_percent_text}: {fee_amount:,} ساتوشی\n"
                 f"مبلغ قابل پرداخت: {expected_amount:,} ساتوشی\n\n"
                 "لطفاً Invoice زیر را حداکثر تا ۲۰ دقیقه پرداخت کنید."
-            ),,
+            ),
         )
         await context.bot.send_message(chat_id=seller_id, text=bolt11)
     except TelegramError:
@@ -788,7 +788,7 @@ async def auto_pay_buyer_invoice(context, order_id, buyer_id, invoice):
                         'ناموفق بود و انجام نشد.\n\n'
                         f'لطفاً یک Invoice جدید دقیقاً به مبلغ {amount_sats:,} ساتوشی '
                         'ایجاد و برای بات ارسال کنید.'
-                    ),,
+                    ),
                 )
                 buyer_prompt_sent = True
                 prompt_stored = store_buyer_invoice_prompt(

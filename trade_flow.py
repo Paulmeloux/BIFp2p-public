@@ -681,7 +681,7 @@ async def confirm_buy_seller_fiat_received(
             text=(
                 f" لطفاً یک Invoice لایتنینگ به مبلغ {amount_sats:,} ساتوشی "
                 "ایجاد و برای بات ارسال کنید."
-            ),,
+            ),
         )
         conn = db_connect()
         cursor = conn.cursor()
@@ -1027,7 +1027,7 @@ async def confirm_seller_fiat_received(update: Update, context: ContextTypes.DEF
                 " فروشنده دریافت فیات را تأیید کرد.\n\n"
                 f"لطفاً یک Invoice لایتنینگ به مبلغ {amount_sats:,} ساتوشی "
                 "ایجاد و برای بات ارسال کنید."
-            ),,
+            ),
         )
         conn = db_connect()
         cursor = conn.cursor()

@@ -6,14 +6,14 @@ import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
-from settings import BOT_USERNAME, BOOK_BUTTON_TEXT, GUIDE_BUTTON_TEXT, SUPPORT_BUTTON_TEXT, TOKEN
+from settings import BOT_USERNAME, GUIDE_BUTTON_TEXT, SUPPORT_BUTTON_TEXT, TOKEN
 
 
 def main_menu():
 
     keyboard = [
         ["🟠 فروش بیتکوین", "🔵 خرید بیتکوین"],
-        [BOOK_BUTTON_TEXT, GUIDE_BUTTON_TEXT],
+        [GUIDE_BUTTON_TEXT],
         [SUPPORT_BUTTON_TEXT]
     ]
 

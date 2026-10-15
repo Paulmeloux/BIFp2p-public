@@ -125,38 +125,6 @@ def init_database():
     )
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS book_purchases (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        buyer_id INTEGER NOT NULL,
-        book_key TEXT NOT NULL,
-        price_sats INTEGER NOT NULL,
-        status TEXT NOT NULL,
-        invoice TEXT,
-        admin_notification_message_id INTEGER,
-        coinos_invoice_id TEXT,
-        coinos_payment_hash TEXT,
-        invoice_sent_at_unix INTEGER,
-        payment_confirmed_at_unix INTEGER,
-        created_at TEXT NOT NULL
-    )
-    """)
-
-    book_existing_columns = {
-        row[1] for row in cursor.execute("PRAGMA table_info(book_purchases)")
-    }
-    book_missing_columns = {
-        "coinos_invoice_id": "TEXT",
-        "coinos_payment_hash": "TEXT",
-        "invoice_sent_at_unix": "INTEGER",
-        "payment_confirmed_at_unix": "INTEGER",
-    }
-    for column_name, column_type in book_missing_columns.items():
-        if column_name not in book_existing_columns:
-            cursor.execute(
-                f"ALTER TABLE book_purchases ADD COLUMN {column_name} {column_type}"
-            )
-
-    cursor.execute("""
     CREATE TABLE IF NOT EXISTS blacklist (
         telegram_id INTEGER PRIMARY KEY,
         reason TEXT NOT NULL,
