@@ -1,0 +1,26 @@
+name: Static Python checks
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile all Python files without executing the bot
+        run: python -m compileall -q .
+      - name: Check excluded modules and references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          files = list(Path('.').glob('*.py'))
+          assert not any(p.name == 'books.py' or p.name == 'bifwallet.py' or p.name.startswith('wallet_') for p in files)
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              assert not re.search(r'books|bifwallet|wallet_', text, re.I), path
+          print(f'Checked {len(files)} Python modules')
+          PY
