@@ -12,7 +12,10 @@ from database import db_connect
 from lightning import buyer_invoice_amount_sats
 from observability import audit_event
 from settings import ADMIN_ID
-from settlement import auto_pay_buyer_invoice, mark_seller_invoice_sent, reset_unsent_manager_invoice
+from settlement import (
+    auto_pay_buyer_invoice, complete_manually_confirmed_buyer_payout,
+    mark_seller_invoice_sent, reset_unsent_manager_invoice,
+)
 from users import format_seller_fee_percent, require_not_blacklisted, seller_fee_amount_sats
 
 
@@ -1344,33 +1347,15 @@ async def confirm_buy_buyer_sats_sent(
         )
         return
 
-    callback_match = re.fullmatch(r"buy_buyer_sats_sent:(\d+)", query.data)
+    callback_match = re.fullmatch(r"buy_buyer_sats_sent:(\d+)", query.data or "")
     if callback_match is None:
         await query.answer("درخواست نامعتبر است.", show_alert=True)
         return
 
     await query.answer()
     order_id = int(callback_match.group(1))
-    conn = db_connect()
-    cursor = conn.cursor()
-    order = cursor.execute(
-        """
-        SELECT order_code, seller_id, buyer_id, order_side, status,
-               buyer_invoice, payout_status
-        FROM orders
-        WHERE id = ?
-        """,
-        (order_id,)
-    ).fetchone()
-
-    if (
-        order is None
-        or order[3] != "BUY"
-        or order[4] != "BUYER_INVOICE_RECEIVED"
-        or order[5] is None
-        or order[6] != "UNKNOWN"
-    ):
-        conn.close()
+    order = complete_manually_confirmed_buyer_payout(order_id, "BUY")
+    if order is None:
         await query.answer(
             "این سفارش قبلاً تکمیل شده یا هنوز قابل تأیید نیست.",
             show_alert=True
@@ -1378,32 +1363,6 @@ async def confirm_buy_buyer_sats_sent(
         return
 
     order_code, seller_id, buyer_id = order[:3]
-    cursor.execute(
-        """
-        UPDATE orders
-        SET status = ?, payout_status = ?
-        WHERE id = ? AND order_side = ? AND status = ?
-          AND buyer_invoice IS NOT NULL AND payout_status = ?
-        """,
-        (
-            "COMPLETED",
-            "MANUALLY_CONFIRMED",
-            order_id,
-            "BUY",
-            "BUYER_INVOICE_RECEIVED",
-            "UNKNOWN"
-        )
-    )
-    if cursor.rowcount != 1:
-        conn.close()
-        await query.answer(
-            "این سفارش قبلاً تکمیل شده یا دیگر قابل تأیید نیست.",
-            show_alert=True
-        )
-        return
-
-    conn.commit()
-    conn.close()
 
     await query.answer()
     try:
@@ -1447,27 +1406,15 @@ async def confirm_buyer_sats_sent(update: Update, context: ContextTypes.DEFAULT_
         )
         return
 
-    await query.answer()
-    order_id = int(query.data.split(":", 1)[1])
-    conn = db_connect()
-    cursor = conn.cursor()
-    order = cursor.execute(
-        """
-        SELECT order_code, seller_id, buyer_id, status, buyer_invoice, payout_status, order_side
-        FROM orders
-        WHERE id = ?
-        """,
-        (order_id,)
-    ).fetchone()
+    callback_match = re.fullmatch(r"buyer_sats_sent:(\d+)", query.data or "")
+    if callback_match is None:
+        await query.answer("درخواست نامعتبر است.", show_alert=True)
+        return
 
-    if (
-        order is None
-        or order[3] != "BUYER_INVOICE_RECEIVED"
-        or order[4] is None
-        or order[5] != "UNKNOWN"
-        or order[6] != "SELL"
-    ):
-        conn.close()
+    await query.answer()
+    order_id = int(callback_match.group(1))
+    order = complete_manually_confirmed_buyer_payout(order_id, "SELL")
+    if order is None:
         await query.answer(
             "این سفارش قبلاً تکمیل شده یا در وضعیت BUYER_INVOICE_RECEIVED نیست.",
             show_alert=True
@@ -1475,31 +1422,6 @@ async def confirm_buyer_sats_sent(update: Update, context: ContextTypes.DEFAULT_
         return
 
     order_code, seller_id, buyer_id = order[:3]
-    cursor.execute(
-        """
-        UPDATE orders
-        SET status = ?, payout_status = ?
-        WHERE id = ? AND status = ? AND buyer_invoice IS NOT NULL
-          AND payout_status = ?
-        """,
-        (
-            "COMPLETED",
-            "MANUALLY_CONFIRMED",
-            order_id,
-            "BUYER_INVOICE_RECEIVED",
-            "UNKNOWN",
-        )
-    )
-    if cursor.rowcount != 1:
-        conn.close()
-        await query.answer(
-            "این سفارش قبلاً تکمیل شده یا دیگر قابل تأیید نیست.",
-            show_alert=True
-        )
-        return
-
-    conn.commit()
-    conn.close()
 
     await query.answer()
     try:

@@ -7,6 +7,7 @@ from telegram.error import TelegramError
 
 from callbacks import SafeCallbackQuery
 from database import db_connect
+from royalty import royalty_gate_message, royalty_new_trade_block_reason
 from settings import ADMIN_ID, OFFICIAL_CHANNEL_ID, OFFICIAL_GROUP_ID
 
 
@@ -36,7 +37,13 @@ def save_user(user):
 def historical_reputation_points(user_id):
 
     conn = db_connect()
-    cursor = conn.cursor()
+    points = historical_reputation_points_with_cursor(conn.cursor(), user_id)
+    conn.close()
+    return points
+
+
+def historical_reputation_points_with_cursor(cursor, user_id):
+    """Read database-derived reputation using the caller's transaction."""
     completed_count, completed_volume = cursor.execute(
         """
         SELECT COUNT(*), COALESCE(SUM(amount_sats), 0)
@@ -53,22 +60,22 @@ def historical_reputation_points(user_id):
         """,
         (user_id,)
     ).fetchone()[0]
-    conn.close()
-
     transaction_points = completed_count * 100
     volume_points = completed_volume
     return transaction_points + volume_points + manual_adjustments
 
 
 
-def maintenance_mode_enabled():
+def maintenance_mode_enabled(cursor=None):
 
-    conn = db_connect()
-    row = conn.execute(
+    conn = None if cursor is not None else db_connect()
+    db_cursor = cursor if cursor is not None else conn.cursor()
+    row = db_cursor.execute(
         "SELECT setting_value FROM bot_settings WHERE setting_key = ?",
         ("maintenance_mode",)
     ).fetchone()
-    conn.close()
+    if conn is not None:
+        conn.close()
     return row is not None and row[0] == "1"
 
 
@@ -160,6 +167,14 @@ async def send_eligibility_failure(update, context, message):
 async def require_order_eligibility(update, context):
 
     user = update.effective_user
+    if royalty_new_trade_block_reason() is not None:
+        await send_eligibility_failure(
+            update,
+            context,
+            royalty_gate_message()
+        )
+        return False
+
     if user.id == ADMIN_ID:
         return True
 

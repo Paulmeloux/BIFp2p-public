@@ -11,8 +11,42 @@ from telegram.ext import ContextTypes
 from database import db_connect
 from observability import audit_event, logger
 from recovery import notify_escrow_cancellation, notify_related_users_of_cancellation
+from royalty import royalty_status_snapshot
 from settings import ACTIVE_ORDER_STATUSES, ADMIN_ID, CHANNEL_ID, ESCROWED_ORDER_STATUSES
 from users import set_maintenance_mode
+
+
+async def royalty_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show local royalty accounting health without revealing the destination."""
+    if update.effective_user.id != ADMIN_ID:
+        return
+    snapshot = royalty_status_snapshot()
+    counts = snapshot["counts"]
+    counts_text = ", ".join(
+        f"{status}={count}" for status, count in sorted(counts.items())
+    ) or "none"
+    unresolved_lines = [
+        f"{order_code or order_id}: {status}, {royalty_sats} sats"
+        for order_id, order_code, status, royalty_sats in snapshot["unresolved"]
+    ]
+    unresolved_text = "\n".join(unresolved_lines) or "none"
+    missing_lines = [
+        str(order_code or order_id)
+        for order_id, order_code in snapshot["missing_obligations"]
+    ]
+    missing_text = ", ".join(missing_lines) or "none"
+    await update.message.reply_text(
+        "Royalty accounting status\n"
+        f"Mode: {snapshot['mode']}\n"
+        f"Payment transport enabled: {snapshot['transport_enabled']}\n"
+        f"Destination valid: {snapshot['destination_valid']}\n"
+        f"Production compliant: {snapshot['production_compliant']}\n"
+        f"New-trade gate: {snapshot['gate_reason'] or 'OPEN'}\n"
+        f"Counts: {counts_text}\n"
+        f"Post-migration completed trades missing obligations: {missing_text}\n"
+        "Unresolved (up to 20):\n"
+        f"{unresolved_text}"
+    )
 
 
 async def ban_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

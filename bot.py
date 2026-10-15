@@ -153,6 +153,7 @@ from admin import (
     admin_cancel_order_command,
     admin_remove_order_command,
     penalty_command,
+    royalty_status_command,
 )
 from recovery import (
     claim_due_seller_payment_timeouts,
@@ -192,6 +193,7 @@ from database import (
     init_database,
     verify_database_integrity,
 )
+from royalty import recover_royalty_state_on_startup, royalty_status_snapshot
 from messaging import help_guide, publish_periodic_market_price, market_price_worker, stop_market_price_worker
 from support import (
     SupportNotificationReplyFilter,
@@ -293,6 +295,23 @@ def main():
     validate_runtime_config()
     init_database()
     verify_database_integrity()
+    recovered_royalties = recover_royalty_state_on_startup()
+    royalty_health = royalty_status_snapshot()
+    if recovered_royalties:
+        logger.warning(
+            "Marked %s in-flight royalty obligation(s) UNKNOWN after restart",
+            recovered_royalties,
+        )
+    if royalty_health["mode"] == "ACCOUNTING_TEST":
+        logger.warning(
+            "Royalty mode ACCOUNTING_TEST records obligations only and is not "
+            "commercially compliant production operation"
+        )
+    if not royalty_health["production_compliant"]:
+        logger.warning(
+            "Royalty production enforcement is not operational; new-trade gate=%s",
+            royalty_health["gate_reason"],
+        )
 
 
     app = (
@@ -515,6 +534,10 @@ def main():
 
     app.add_handler(
         CommandHandler("penalty", penalty_command, filters=PRIVATE_CHAT_ONLY)
+    )
+
+    app.add_handler(
+        CommandHandler("royalty_status", royalty_status_command, filters=PRIVATE_CHAT_ONLY)
     )
 
 

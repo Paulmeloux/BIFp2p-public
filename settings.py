@@ -14,6 +14,41 @@ COINOS_TOKEN = os.getenv("COINOS_TOKEN")
 COINOS_API_BASE = os.getenv("COINOS_API_BASE", "https://coinos.io/api").rstrip("/")
 
 
+ROYALTY_MODE = os.getenv("ROYALTY_MODE", "UNCONFIGURED").strip().upper()
+
+
+ROYALTY_DESTINATION_KIND = os.getenv("ROYALTY_DESTINATION_KIND", "").strip().upper()
+
+
+ROYALTY_DESTINATION = os.getenv("ROYALTY_DESTINATION", "").strip()
+
+
+ROYALTY_ACCOUNTING_TEST_ACK_PHRASE = "I_UNDERSTAND_ACCOUNTING_TEST_IS_NOT_PRODUCTION"
+
+
+ROYALTY_ACCOUNTING_TEST_ACKNOWLEDGED = (
+    os.getenv("ROYALTY_ACCOUNTING_TEST_ACK", "").strip()
+    == ROYALTY_ACCOUNTING_TEST_ACK_PHRASE
+)
+
+
+def _nonnegative_environment_integer(name, default):
+    value = int(os.getenv(name, str(default)))
+    if value < 0:
+        raise RuntimeError(f"{name} must be non-negative")
+    return value
+
+
+ROYALTY_SETTLEMENT_GRACE_SECONDS = _nonnegative_environment_integer(
+    "ROYALTY_SETTLEMENT_GRACE_SECONDS", 0
+)
+
+
+BUYER_PAYOUT_PROCESSING_STALE_SECONDS = _nonnegative_environment_integer(
+    "BUYER_PAYOUT_PROCESSING_STALE_SECONDS", 5 * 60
+)
+
+
 CHANNEL_ID = "@BitcoinIsFreedom"
 
 
@@ -187,6 +222,19 @@ SUPPORT_MESSAGE = 12
 
 
 def validate_runtime_config():
+    if ROYALTY_MODE not in ("ACCOUNTING_TEST", "PRODUCTION_ENFORCED"):
+        raise RuntimeError(
+            "ROYALTY_MODE must be ACCOUNTING_TEST or PRODUCTION_ENFORCED"
+        )
+    if ROYALTY_MODE == "ACCOUNTING_TEST" and not ROYALTY_ACCOUNTING_TEST_ACKNOWLEDGED:
+        raise RuntimeError(
+            "ACCOUNTING_TEST requires the explicit ROYALTY_ACCOUNTING_TEST_ACK "
+            "development/staging acknowledgement"
+        )
+    if BUYER_PAYOUT_PROCESSING_STALE_SECONDS < 120:
+        raise RuntimeError(
+            "BUYER_PAYOUT_PROCESSING_STALE_SECONDS must be at least 120"
+        )
     if not TOKEN:
         raise RuntimeError("BOT_TOKEN is not configured")
     if any(ord(character) < 32 or ord(character) == 127 for character in TOKEN):

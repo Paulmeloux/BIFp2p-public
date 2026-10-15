@@ -80,6 +80,8 @@ def init_database():
         expiration_notification_sent_at_unix INTEGER,
         expiration_delete_attempted_at_unix INTEGER,
         repost_claimed_at_unix INTEGER,
+        completed_at_unix INTEGER,
+        refunded_at_unix INTEGER,
         status TEXT,
         created_at TEXT
     )
@@ -129,6 +131,46 @@ def init_database():
         telegram_id INTEGER PRIMARY KEY,
         reason TEXT NOT NULL,
         created_at TEXT NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS royalty_obligations (
+        order_id INTEGER PRIMARY KEY,
+        original_amount_sats INTEGER NOT NULL CHECK (original_amount_sats >= 0),
+        operator_commission_sats INTEGER NOT NULL CHECK (operator_commission_sats >= 0),
+        royalty_sats INTEGER NOT NULL CHECK (royalty_sats >= 0),
+        destination_kind TEXT,
+        destination_snapshot TEXT,
+        mode TEXT NOT NULL CHECK (mode IN ('ACCOUNTING_TEST', 'PRODUCTION_ENFORCED')),
+        completion_source TEXT NOT NULL CHECK (completion_source IN ('NORMAL', 'RECONCILED', 'MANUAL')),
+        status TEXT NOT NULL CHECK (status IN ('ACCOUNTED', 'CONFIG_ERROR', 'DUE', 'PAYING', 'PAID', 'FAILED', 'UNKNOWN', 'ZERO')),
+        settlement_due_at_unix INTEGER NOT NULL,
+        created_at_unix INTEGER NOT NULL,
+        updated_at_unix INTEGER NOT NULL,
+        confirmed_at_unix INTEGER,
+        failure_code TEXT,
+        failure_detail TEXT,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE RESTRICT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS royalty_payment_attempts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        attempt_number INTEGER NOT NULL,
+        payment_request TEXT,
+        payment_request_fingerprint TEXT,
+        status TEXT NOT NULL CHECK (status IN ('PAYING', 'PAID', 'FAILED', 'UNKNOWN')),
+        started_at_unix INTEGER NOT NULL,
+        resolved_at_unix INTEGER,
+        coinos_payment_id TEXT,
+        coinos_payment_ref TEXT,
+        error_class TEXT,
+        UNIQUE (order_id, attempt_number),
+        UNIQUE (payment_request),
+        FOREIGN KEY (order_id) REFERENCES royalty_obligations(order_id) ON DELETE RESTRICT
     )
     """)
 
@@ -185,6 +227,8 @@ def init_database():
         "expiration_notification_sent_at_unix": "INTEGER",
         "expiration_delete_attempted_at_unix": "INTEGER",
         "repost_claimed_at_unix": "INTEGER",
+        "completed_at_unix": "INTEGER",
+        "refunded_at_unix": "INTEGER",
     }
 
     for column_name, column_type in missing_columns.items():
@@ -211,6 +255,13 @@ def init_database():
         )
 
     now_unix = int(time.time())
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO bot_settings (setting_key, setting_value)
+        VALUES (?, ?)
+        """,
+        ("royalty_accounting_started_at_unix", str(now_unix))
+    )
     open_orders_without_timestamp = cursor.execute(
         """
         SELECT id, created_at
@@ -297,6 +348,26 @@ def init_database():
         """
         CREATE INDEX IF NOT EXISTS idx_orders_seller_invoice_deadline
         ON orders (status, seller_invoice_deadline_unix)
+        """
+    )
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_royalty_obligations_status_due
+        ON royalty_obligations (status, settlement_due_at_unix, order_id)
+        """
+    )
+    # Payment requests can contain sensitive Lightning metadata. Older staging
+    # schemas had a raw column; retain it for compatibility but purge and never
+    # populate it. The fingerprint is sufficient for duplicate detection.
+    cursor.execute(
+        "UPDATE royalty_payment_attempts SET payment_request = NULL "
+        "WHERE payment_request IS NOT NULL"
+    )
+    cursor.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_royalty_payment_request_fingerprint
+        ON royalty_payment_attempts (payment_request_fingerprint)
+        WHERE payment_request_fingerprint IS NOT NULL
         """
     )
 

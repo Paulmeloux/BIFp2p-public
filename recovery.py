@@ -12,7 +12,11 @@ from settings import (
     ADMIN_ID, CHANNEL_ID, OPEN_ORDER_EXPIRATION_MESSAGE,
     OPEN_ORDER_LIFETIME_SECONDS, ORDER_TIMEOUT_POLL_SECONDS, REPOST_CLAIM_STALE_SECONDS,
 )
-from settlement import process_coinos_escrow_invoices, reconcile_unknown_buyer_payouts
+from settlement import (
+    process_coinos_escrow_invoices,
+    reconcile_unknown_buyer_payouts,
+    recover_stale_buyer_payouts,
+)
 
 
 def claim_due_seller_payment_timeouts():
@@ -508,6 +512,12 @@ async def process_expired_order_side_effects(context):
 
 
 async def run_order_timeout_recovery_once(context):
+    recovered_payouts = recover_stale_buyer_payouts()
+    if recovered_payouts:
+        logger.warning(
+            "Moved %s stale buyer payout(s) to reconciliation-only state",
+            recovered_payouts,
+        )
     await process_coinos_escrow_invoices(context)
     await reconcile_unknown_buyer_payouts(context)
     claim_due_seller_payment_timeouts()

@@ -12,6 +12,7 @@ from database import db_connect
 from observability import audit_event
 from order_publishing import publish_buy_order, publish_sell_order
 from pricing import market_price_method_keyboard, price_rule_text
+from royalty import royalty_gate_message, royalty_new_trade_block_reason
 from settings import (
     AMOUNT, BUY_AMOUNT, BUY_CONFIRM, BUY_DESCRIPTION, BUY_PRICE, BUY_PRICE_METHOD,
     BUY_PRICE_PERCENT, CONFIRM, DESCRIPTION, MAX_MARKET_OFFSET_PERCENT,
@@ -187,6 +188,21 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         conn = db_connect()
         cursor = conn.cursor()
+        cursor.execute("BEGIN IMMEDIATE")
+
+        if maintenance_mode_enabled(cursor):
+            conn.rollback()
+            conn.close()
+            await query.answer(
+                "🛠 ثبت سفارش جدید در حالت تعمیر و نگهداری ممنوع است.",
+                show_alert=True
+            )
+            return CONFIRM
+        if royalty_new_trade_block_reason(cursor) is not None:
+            conn.rollback()
+            conn.close()
+            await query.answer(royalty_gate_message(), show_alert=True)
+            return CONFIRM
 
 
         cursor.execute(
@@ -452,6 +468,20 @@ async def confirm_buy_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     conn = db_connect()
     cursor = conn.cursor()
+    cursor.execute("BEGIN IMMEDIATE")
+    if maintenance_mode_enabled(cursor):
+        conn.rollback()
+        conn.close()
+        await query.answer(
+            "🛠 ثبت سفارش جدید در حالت تعمیر و نگهداری ممنوع است.",
+            show_alert=True
+        )
+        return BUY_CONFIRM
+    if royalty_new_trade_block_reason(cursor) is not None:
+        conn.rollback()
+        conn.close()
+        await query.answer(royalty_gate_message(), show_alert=True)
+        return BUY_CONFIRM
     cursor.execute(
         """
         INSERT INTO orders

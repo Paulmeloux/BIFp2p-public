@@ -12,6 +12,7 @@ from callbacks import SafeCallbackQuery
 from database import db_connect
 from observability import audit_event, logger
 from pricing import current_order_price_details, format_percent
+from royalty import royalty_gate_message, royalty_new_trade_block_reason
 from settings import ADMIN_ID, CHANNEL_ID
 from settlement import send_coinos_escrow_invoice
 from telegram_ui import (
@@ -20,7 +21,13 @@ from telegram_ui import (
     decline_channel_order_callback_data, main_menu, parse_open_order_callback,
     parse_order_deep_link, sell_buy_order_callback_data,
 )
-from users import require_order_eligibility, save_user, seller_fee_percent_from_score, user_reputation_score
+from users import (
+    channel_membership_points,
+    historical_reputation_points_with_cursor,
+    require_order_eligibility,
+    save_user,
+    seller_fee_percent_from_score,
+)
 
 
 async def acceptance_price_snapshot(order_id, expected_generation):
@@ -343,9 +350,31 @@ async def confirm_sell_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.answer("این سفارش دیگر در دسترس نیست.", show_alert=True)
         return ConversationHandler.END
 
+    score_conn = db_connect()
+    score_row = score_conn.execute(
+        "SELECT seller_id FROM orders WHERE id = ? AND order_side = ?",
+        (order_id, "SELL"),
+    ).fetchone()
+    score_conn.close()
+    if score_row is None:
+        await query.answer("این سفارش یافت نشد.", show_alert=True)
+        return ConversationHandler.END
+    # Telegram membership is the only network-derived part of reputation.  Fetch
+    # it before taking SQLite's write lock, then recompute all database-derived
+    # points in the same transaction that assigns the order and locks its fee.
+    expected_seller_id = score_row[0]
+    seller_membership_points = await channel_membership_points(
+        context, expected_seller_id
+    )
+
     conn = db_connect()
     cursor = conn.cursor()
     cursor.execute("BEGIN IMMEDIATE")
+    if royalty_new_trade_block_reason(cursor) is not None:
+        conn.rollback()
+        conn.close()
+        await query.answer(royalty_gate_message(), show_alert=True)
+        return ConversationHandler.END
     order = cursor.execute(
         """
         SELECT seller_id, order_code, amount_sats, channel_message_id,
@@ -380,6 +409,7 @@ async def confirm_sell_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if (
         order_side != "SELL"
+        or seller_id != expected_seller_id
         or status != "OPEN"
         or assigned_buyer_id is not None
         or open_generation != callback_generation
@@ -388,7 +418,10 @@ async def confirm_sell_order(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.answer("این سفارش دیگر در دسترس نیست.", show_alert=True)
         return ConversationHandler.END
 
-    seller_score = await user_reputation_score(context, seller_id)
+    seller_score = (
+        historical_reputation_points_with_cursor(cursor, seller_id)
+        + seller_membership_points
+    )
     locked_fee_percent = seller_fee_percent_from_score(seller_score)
 
     cursor.execute(
@@ -669,9 +702,16 @@ async def confirm_buy_order_as_seller(
         await query.answer("این سفارش دیگر در دسترس نیست.", show_alert=True)
         return
 
+    seller_membership_points = await channel_membership_points(context, seller.id)
+
     conn = db_connect()
     cursor = conn.cursor()
     cursor.execute("BEGIN IMMEDIATE")
+    if royalty_new_trade_block_reason(cursor) is not None:
+        conn.rollback()
+        conn.close()
+        await query.answer(royalty_gate_message(), show_alert=True)
+        return
     order = cursor.execute(
         """
         SELECT order_code, buyer_id, amount_sats, order_side, status,
@@ -722,7 +762,10 @@ async def confirm_buy_order_as_seller(
         await query.answer("این سفارش دیگر در دسترس نیست.", show_alert=True)
         return
 
-    seller_score = await user_reputation_score(context, seller.id)
+    seller_score = (
+        historical_reputation_points_with_cursor(cursor, seller.id)
+        + seller_membership_points
+    )
     locked_fee_percent = seller_fee_percent_from_score(seller_score)
 
     cursor.execute(

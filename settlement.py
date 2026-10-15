@@ -11,7 +11,13 @@ from database import db_connect
 from escrow_invoices import get_or_create_coinos_invoice, reserve_coinos_invoice_id
 from observability import audit_event, logger
 from pricing import fiat_total_toman
-from settings import ADMIN_ID, COINOS_TOKEN, SELLER_INVOICE_PAYMENT_SECONDS
+from royalty import create_royalty_obligation
+from settings import (
+    ADMIN_ID,
+    BUYER_PAYOUT_PROCESSING_STALE_SECONDS,
+    COINOS_TOKEN,
+    SELLER_INVOICE_PAYMENT_SECONDS,
+)
 from users import format_seller_fee_percent, seller_fee_amount_sats
 
 
@@ -469,18 +475,65 @@ def mark_buyer_payout_unknown(order_id, error_text):
         """
         UPDATE orders
         SET payout_status = ?, payout_error = ?
-        WHERE id = ? AND status = ? AND payout_status = ?
+        WHERE id = ? AND status IN (?, ?) AND payout_status = ?
         """,
         (
             "UNKNOWN",
             str(error_text)[:500],
             order_id,
             "BUYER_INVOICE_RECEIVED",
+            "CANCELED_REFUND_PENDING",
             "PROCESSING",
         ),
     )
     conn.commit()
     conn.close()
+
+
+def recover_stale_buyer_payouts(now_unix=None, stale_seconds=None):
+    """Move abandoned payout claims to reconciliation without repaying them.
+
+    A PROCESSING claim may represent a remote payment whose response was lost.
+    It is therefore never reset to a payable state.  A generous age threshold
+    preserves legitimate requests still in flight; the normal Coinos request
+    timeout is substantially shorter than the configured minimum threshold.
+    """
+    now_unix = int(time.time()) if now_unix is None else int(now_unix)
+    stale_seconds = (
+        BUYER_PAYOUT_PROCESSING_STALE_SECONDS
+        if stale_seconds is None
+        else int(stale_seconds)
+    )
+    if stale_seconds < 120:
+        raise ValueError("buyer payout stale threshold must be at least 120 seconds")
+    cutoff = now_unix - stale_seconds
+    conn = db_connect(timeout=30)
+    cursor = conn.cursor()
+    cursor.execute("BEGIN IMMEDIATE")
+    cursor.execute(
+        """
+        UPDATE orders
+        SET payout_status = ?,
+            payout_error = CASE
+                WHEN payout_error IS NULL OR payout_error = ''
+                    THEN 'STALE_PROCESSING_AFTER_RESTART'
+                ELSE payout_error || '; STALE_PROCESSING_AFTER_RESTART'
+            END
+        WHERE status IN (?, ?) AND payout_status = ?
+          AND COALESCE(payout_started_at_unix, 0) <= ?
+        """,
+        (
+            "UNKNOWN",
+            "BUYER_INVOICE_RECEIVED",
+            "CANCELED_REFUND_PENDING",
+            "PROCESSING",
+            cutoff,
+        ),
+    )
+    recovered = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return recovered
 
 
 
@@ -620,7 +673,7 @@ def complete_reconciled_buyer_payout(order_id, buyer_id, invoice, payment):
     cursor.execute("BEGIN IMMEDIATE")
     row = cursor.execute(
         """
-        SELECT order_code, seller_id, buyer_id, amount_sats, order_side
+        SELECT order_code, seller_id, buyer_id, amount_sats, order_side, status
         FROM orders
         WHERE id = ? AND buyer_id = ?
           AND status IN (?, ?) AND buyer_invoice = ?
@@ -632,17 +685,25 @@ def complete_reconciled_buyer_payout(order_id, buyer_id, invoice, payment):
         conn.rollback()
         conn.close()
         return None
+    prior_status = row[5]
+    terminal_at_unix = int(time.time())
+    is_refund = prior_status == "CANCELED_REFUND_PENDING"
+    terminal_status = "REFUNDED" if is_refund else "COMPLETED"
+    completed_at_unix = None if is_refund else terminal_at_unix
+    refunded_at_unix = terminal_at_unix if is_refund else None
     cursor.execute(
         """
         UPDATE orders
         SET payout_status = ?, payout_coinos_id = ?, payout_coinos_ref = ?,
-            payout_error = NULL, status = ?
+            status = ?, completed_at_unix = ?, refunded_at_unix = ?
         WHERE id = ? AND buyer_id = ?
           AND status IN (?, ?) AND buyer_invoice = ?
           AND payout_status = ?
         """,
         (
-            "CONFIRMED", payment_id, payment_ref, "COMPLETED", order_id, buyer_id,
+            "CONFIRMED", payment_id, payment_ref, terminal_status,
+            completed_at_unix, refunded_at_unix,
+            order_id, buyer_id,
             "BUYER_INVOICE_RECEIVED", "CANCELED_REFUND_PENDING", invoice, "UNKNOWN",
         ),
     )
@@ -650,8 +711,65 @@ def complete_reconciled_buyer_payout(order_id, buyer_id, invoice, payment):
         conn.rollback()
         conn.close()
         return None
-    conn.commit()
-    conn.close()
+    try:
+        if prior_status == "BUYER_INVOICE_RECEIVED":
+            create_royalty_obligation(
+                cursor, order_id, "RECONCILED", completed_at_unix
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+    return (*row[:5], terminal_status)
+
+
+def complete_manually_confirmed_buyer_payout(order_id, expected_order_side):
+    """Atomically complete one admin-confirmed payout and account its royalty."""
+    if expected_order_side not in ("BUY", "SELL"):
+        raise ValueError("invalid expected order side")
+    conn = db_connect(timeout=30)
+    cursor = conn.cursor()
+    cursor.execute("BEGIN IMMEDIATE")
+    row = cursor.execute(
+        """
+        SELECT order_code, seller_id, buyer_id
+        FROM orders
+        WHERE id = ? AND order_side = ? AND status = ?
+          AND buyer_invoice IS NOT NULL AND payout_status = ?
+        """,
+        (order_id, expected_order_side, "BUYER_INVOICE_RECEIVED", "UNKNOWN"),
+    ).fetchone()
+    if row is None:
+        conn.rollback()
+        conn.close()
+        return None
+    completed_at_unix = int(time.time())
+    cursor.execute(
+        """
+        UPDATE orders
+        SET status = ?, payout_status = ?, completed_at_unix = ?
+        WHERE id = ? AND order_side = ? AND status = ?
+          AND buyer_invoice IS NOT NULL AND payout_status = ?
+        """,
+        (
+            "COMPLETED", "MANUALLY_CONFIRMED", completed_at_unix, order_id,
+            expected_order_side, "BUYER_INVOICE_RECEIVED", "UNKNOWN",
+        ),
+    )
+    if cursor.rowcount != 1:
+        conn.rollback()
+        conn.close()
+        return None
+    try:
+        create_royalty_obligation(cursor, order_id, "MANUAL", completed_at_unix)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     return row
 
 
@@ -690,18 +808,48 @@ async def reconcile_unknown_buyer_payouts(context):
         )
         if completed is None:
             continue
-        order_code, seller_id, buyer_id, amount_sats, order_side = completed
+        (
+            order_code,
+            seller_id,
+            buyer_id,
+            amount_sats,
+            order_side,
+            terminal_status,
+        ) = completed
         logger.info(
             "Coinos buyer payout reconciled order_id=%s payment_id=%s amount=%s",
             order_id, payment.get("id"), amount_sats,
         )
         audit_event(
-            "buyer_payout_reconciled", order_id=order_id, order_code=order_code,
+            "buyer_refund_reconciled" if terminal_status == "REFUNDED" else "buyer_payout_reconciled",
+            order_id=order_id, order_code=order_code,
             side=order_side, seller_id=seller_id, buyer_id=buyer_id, amount_sats=amount_sats
         )
-        await notify_completed_trade(
-            context, order_code, order_id, seller_id, buyer_id
-        )
+        if terminal_status == "REFUNDED":
+            await notify_refunded_trade(
+                context, order_code, order_id, seller_id, buyer_id
+            )
+        else:
+            await notify_completed_trade(
+                context, order_code, order_id, seller_id, buyer_id
+            )
+
+
+async def notify_refunded_trade(context, order_code, order_id, seller_id, buyer_id):
+    """Report a reconciled cancellation refund without calling it a trade."""
+    messages = (
+        (buyer_id, "بازپرداخت بیت‌کوین سفارش لغوشده برای شما تأیید شد."),
+        (seller_id, "بازپرداخت سفارش لغوشده به خریدار تأیید شد."),
+        (
+            ADMIN_ID,
+            f"بازپرداخت سفارش لغوشده {order_code} با شناسه {order_id} تأیید شد.",
+        ),
+    )
+    for chat_id, text in messages:
+        try:
+            await context.bot.send_message(chat_id=chat_id, text=text)
+        except TelegramError:
+            pass
 
 
 
@@ -866,6 +1014,7 @@ async def auto_pay_buyer_invoice(context, order_id, buyer_id, invoice):
 
     payment_id = payment.get("id")
     payment_ref = payment.get("ref")
+    completed_at_unix = int(time.time())
     conn = db_connect(timeout=30)
     cursor = conn.cursor()
     cursor.execute("BEGIN IMMEDIATE")
@@ -873,29 +1022,50 @@ async def auto_pay_buyer_invoice(context, order_id, buyer_id, invoice):
         """
         UPDATE orders
         SET payout_status = ?, payout_coinos_id = ?, payout_coinos_ref = ?,
-            payout_error = NULL, status = ?
+            payout_error = NULL, status = ?, completed_at_unix = ?
         WHERE id = ? AND buyer_id = ? AND status = ? AND buyer_invoice = ?
-          AND payout_status = ?
+          AND payout_status IN (?, ?)
         """,
         (
             "CONFIRMED",
             payment_id,
             payment_ref,
             "COMPLETED",
+            completed_at_unix,
             order_id,
             buyer_id,
             "BUYER_INVOICE_RECEIVED",
             invoice,
             "PROCESSING",
+            "UNKNOWN",
         ),
     )
     updated = cursor.rowcount == 1
     if updated:
-        conn.commit()
+        try:
+            create_royalty_obligation(
+                cursor, order_id, "NORMAL", completed_at_unix
+            )
+            conn.commit()
+        except Exception as exc:
+            conn.rollback()
+            conn.close()
+            mark_buyer_payout_unknown(order_id, exc)
+            logger.exception(
+                "Remote buyer payout confirmed but royalty accounting failed; "
+                "payout marked UNKNOWN for reconciliation order_id=%s",
+                order_id,
+            )
+            return False
     else:
         conn.rollback()
     conn.close()
     if not updated:
+        # The remote payment is confirmed, so the only safe fallback is an
+        # UNKNOWN reconciliation state.  Never make this invoice payable again.
+        mark_buyer_payout_unknown(
+            order_id, "REMOTE_CONFIRMED_LOCAL_COMPLETION_MISSED"
+        )
         logger.critical(
             "Coinos payout confirmed remotely but local completion failed order_id=%s payment_id=%s",
             order_id,
