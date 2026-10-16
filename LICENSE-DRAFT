@@ -1,0 +1,60 @@
+BIFp2p Source-Available License v1.0 — REVIEW DRAFT
+Copyright (c) 2026 BIFp2p contributors. Original project: https://github.com/Paulmeloux
+
+IMPORTANT: THIS IS A PROPOSED LICENSE, NOT A FINAL LEGAL INSTRUMENT.
+Do not distribute under these terms until the copyright holder approves them
+and obtains any legal advice considered necessary.
+
+1. Definitions
+"Software" means the BIFp2p code distributed with this license.
+"Operator" means a person or entity running the Software to facilitate trades.
+"Completed Trade" means a trade finally recorded as successfully completed,
+excluding refunded, cancelled, or failed transactions.
+"Original Amount" means the trade's original Bitcoin amount in satoshis.
+
+2. Source access and modifications
+Subject to these terms, you may inspect, copy, modify, and redistribute the
+Software, including translations and adaptations. Retain this license, existing
+copyright notices, the BIFp2p attribution, and a notice of material changes.
+Do not imply that a modified deployment is officially operated or endorsed
+by the original project.
+
+3. Independent operation
+You may operate your own deployment using your own infrastructure, bot
+credentials, and trading wallet. You are solely responsible for security,
+funds, legal compliance, and user support for your deployment.
+
+4. Royalty for independent commercial operation
+For every Completed Trade processed by an independent Operator's deployment,
+the Operator owes the BIFp2p project a royalty of 0.1% of the Original Amount,
+rounded down to whole satoshis (original_amount_sats // 1000).
+The royalty is an expense of the Operator and must not be represented as an
+additional charge imposed by BIFp2p on end users. Payment beneficiary:
+bitcoinisfreedombot@coinos.io.
+An accounting-only test configuration is not payment or royalty compliance.
+A failed or uncertain payment must not be represented as settled.
+
+5. No trademark grant
+This license does not grant trademark rights or permission to impersonate
+the official BIFp2p project.
+
+6. No warranty
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTIES OF ANY KIND. OPERATORS BEAR THE RISKS OF
+RUNNING SOFTWARE THAT MAY CONTROL OR TRANSFER FUNDS.
+
+7. Limitation of liability
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CONTRIBUTORS ARE NOT
+LIABLE FOR INDIRECT, INCIDENTAL, CONSEQUENTIAL, OR SPECIAL DAMAGES,
+INCLUDING LOSS OF FUNDS, ARISING FROM USE OF THE SOFTWARE.
+
+8. Termination
+Rights under this license terminate on material breach, subject to any
+mandatory applicable law. Termination does not erase accrued royalties.
+
+Open legal decisions before approval:
+- Identify the correct copyright owner and contributor licensing terms.
+- Define payment interval, due date, acceptable proof, disputes and remedies.
+- Determine governing law and jurisdiction.
+- Clarify noncommercial testing and contributor use.
+- Review enforceability and local regulatory requirements.
