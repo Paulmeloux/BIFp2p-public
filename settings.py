@@ -223,7 +223,7 @@ SUPPORT_MESSAGE = 12
 
 def validate_runtime_config():
     required = {"BIFP2P_CHANNEL_ID": CHANNEL_ID, "BIFP2P_OFFICIAL_CHANNEL_URL": OFFICIAL_CHANNEL_URL, "BIFP2P_BOT_USERNAME": BOT_USERNAME, "MARKET_PRICE_API_URL": MARKET_PRICE_API_URL}
-    missing = [key for key, value in required.items() if not value]
+    missing = [key for key, value in required.items() if not value or value.upper().startswith("REPLACE_WITH_")]
     if ADMIN_ID <= 0:
         missing.append("BIFP2P_ADMIN_ID")
     if missing:
