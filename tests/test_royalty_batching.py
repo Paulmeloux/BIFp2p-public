@@ -1,7 +1,7 @@
 """Offline tests for the isolated royalty batching ledger."""
 import sqlite3
 import unittest
-from royalty_batching import install_batch_schema, create_batch, mark_batch_unknown
+from royalty_batching import (install_batch_schema, create_batch, mark_batch_unknown,\n    claim_batch_for_offline_test, recover_in_flight_batches)
 
 class BatchLedgerTests(unittest.TestCase):
     def setUp(self):
@@ -63,6 +63,32 @@ class BatchLedgerTests(unittest.TestCase):
         self.assertEqual(self.db.execute(
             "SELECT status FROM royalty_batches WHERE id=?",(batch,)
         ).fetchone()[0],"UNKNOWN")
+
+    def test_offline_claim_is_single_attempt_and_crash_quarantines(self):
+        self.add(1)
+        batch = create_batch(self.db, "COINOS_USERNAME", "alice")
+        fingerprint = "a" * 64
+        self.assertTrue(claim_batch_for_offline_test(self.db, batch, fingerprint))
+        self.assertFalse(claim_batch_for_offline_test(self.db, batch, fingerprint))
+        self.assertEqual(recover_in_flight_batches(self.db), 1)
+        self.assertEqual(recover_in_flight_batches(self.db), 0)
+        self.assertFalse(claim_batch_for_offline_test(self.db, batch, "b" * 64))
+        self.assertEqual(self.db.execute(
+            "SELECT status FROM royalty_batches WHERE id=?", (batch,)
+        ).fetchone()[0], "UNKNOWN")
+        self.assertEqual(self.db.execute(
+            "SELECT status FROM royalty_batch_attempts WHERE batch_id=?", (batch,)
+        ).fetchone()[0], "UNKNOWN")
+        self.assertIsNone(create_batch(self.db, "COINOS_USERNAME", "alice"))
+
+    def test_invalid_fingerprint_cannot_claim(self):
+        self.add(1)
+        batch = create_batch(self.db, "COINOS_USERNAME", "alice")
+        with self.assertRaises(ValueError):
+            claim_batch_for_offline_test(self.db, batch, "invalid")
+        self.assertEqual(self.db.execute(
+            "SELECT status FROM royalty_batches WHERE id=?", (batch,)
+        ).fetchone()[0], "PREPARED")
 
     def test_invalid_inputs_do_not_reserve(self):
         self.add(1)
