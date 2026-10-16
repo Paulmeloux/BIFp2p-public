@@ -69,8 +69,8 @@ automatically. No safe production deployment guide exists yet.
 ## Security and limitations
 
 - Never commit API tokens, private keys, user data, SQLite databases or logs.
-- Operator-specific identifiers are still embedded in the source and must be
-  refactored before third-party deployment.
+- Core operator identifiers now use environment configuration; embedded
+  community references in user-facing messages still need review and localization.
 - An uncertain payout must never be retried blindly.
 - Offline unit tests are not a security audit.
 - Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
