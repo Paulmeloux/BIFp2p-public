@@ -222,12 +222,6 @@ SUPPORT_MESSAGE = 12
 
 
 def validate_runtime_config():
-    required = {"BIFP2P_CHANNEL_ID": CHANNEL_ID, "BIFP2P_OFFICIAL_CHANNEL_URL": OFFICIAL_CHANNEL_URL, "BIFP2P_BOT_USERNAME": BOT_USERNAME, "MARKET_PRICE_API_URL": MARKET_PRICE_API_URL}
-    missing = [key for key, value in required.items() if not value or value.upper().startswith("REPLACE_WITH_")]
-    if ADMIN_ID <= 0:
-        missing.append("BIFP2P_ADMIN_ID")
-    if missing:
-        raise RuntimeError("Missing operator configuration: " + ", ".join(missing))
     if ROYALTY_MODE not in ("ACCOUNTING_TEST", "PRODUCTION_ENFORCED"):
         raise RuntimeError(
             "ROYALTY_MODE must be ACCOUNTING_TEST or PRODUCTION_ENFORCED"
@@ -237,6 +231,12 @@ def validate_runtime_config():
             "ACCOUNTING_TEST requires the explicit ROYALTY_ACCOUNTING_TEST_ACK "
             "development/staging acknowledgement"
         )
+    required = {"BIFP2P_CHANNEL_ID": CHANNEL_ID, "BIFP2P_OFFICIAL_CHANNEL_URL": OFFICIAL_CHANNEL_URL, "BIFP2P_BOT_USERNAME": BOT_USERNAME, "MARKET_PRICE_API_URL": MARKET_PRICE_API_URL}
+    missing = [key for key, value in required.items() if not value or value.upper().startswith("REPLACE_WITH_")]
+    if ADMIN_ID <= 0:
+        missing.append("BIFP2P_ADMIN_ID")
+    if missing:
+        raise RuntimeError("Missing operator configuration: " + ", ".join(missing))
     if BUYER_PAYOUT_PROCESSING_STALE_SECONDS < 120:
         raise RuntimeError(
             "BUYER_PAYOUT_PROCESSING_STALE_SECONDS must be at least 120"
