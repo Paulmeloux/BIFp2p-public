@@ -70,6 +70,7 @@ from observability import audit_event, logger
 from coinos_api import CoinosNotFound, coinos_request
 from lightning import buyer_invoice_amount_sats
 from telegram_ui import (
+    project_about_text,
     main_menu,
     confirm_keyboard,
     buy_callback_data,
@@ -245,6 +246,12 @@ from pricing import (
 )
 
 
+async def about_project(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Display the original project's identity independently of the operator."""
+    if update.effective_message is not None:
+        await update.effective_message.reply_text(project_about_text())
+
+
 async def set_bot_commands(app: Application) -> None:
 
     await app.bot.delete_my_commands()
@@ -253,7 +260,8 @@ async def set_bot_commands(app: Application) -> None:
         BotCommand("help", "راهنما"),
         BotCommand("cancel", "لغو یک سفارش"),
         BotCommand("cancel_all_order", "لغو همه سفارشات"),
-        BotCommand("support", "پشتیبانی")
+        BotCommand("support", "پشتیبانی"),
+        BotCommand("about", "About BIFp2p and original project")
     ], scope=BotCommandScopeAllPrivateChats())
     await run_order_timeout_recovery_once(app)
     app.bot_data["order_timeout_worker"] = asyncio.create_task(
@@ -529,6 +537,10 @@ def main():
 
     app.add_handler(
         CommandHandler("help", help_guide, filters=PRIVATE_CHAT_ONLY)
+    )
+
+    app.add_handler(
+        CommandHandler("about", about_project, filters=PRIVATE_CHAT_ONLY)
     )
 
 
