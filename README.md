@@ -1,89 +1,202 @@
 # BIFp2p
 
-**Source-available development preview | Lightning P2P trading on Telegram**
+### Bitcoin is freedom. Exchange should not require permission.
 
-BIFp2p is a Telegram-based peer-to-peer Bitcoin trading bot. Traders arrange fiat
-settlement directly with each other, while the application coordinates Lightning
-escrow and payout through Coinos. The project is intended to help independent
-developers inspect and improve the code and, once the financial safety gates are
-completed, allow independent operators to deploy their own instances.
+**BIFp2p** is a source-available, Telegram-based peer-to-peer Bitcoin exchange
+project built around a simple conviction: people should be able to exchange
+Bitcoin directly, without having to surrender their identity or rely on a
+centralized fiat custodian.
 
-**WARNING: NOT READY FOR LIVE FUNDS OR PRODUCTION DEPLOYMENT.** Royalty
-payment transport is disabled; the Coinos payment reconciliation contract and
-end-to-end safety of escrow, refunds and payouts have not been fully verified.
-This repository is provided for code review and offline development.
+The project began in the **Bitcoin Is Freedom** community as a practical
+response to the barriers faced by people in restricted financial environments.
+Its purpose is not to create another gatekeeper. It is to make direct Bitcoin
+exchange more accessible, inspectable, and reproducible by independent
+communities.
 
-## One codebase, two roles
+**Original project:** [Bitcoin Is Freedom](https://t.me/BitcoinIsFreedom)  
+**Original author and maintainer:** [Paul](https://github.com/Paulmeloux)  
+**Canonical source:** [github.com/Paulmeloux/BIFp2p-public](https://github.com/Paulmeloux/BIFp2p-public)
 
-Developers and independent operators use the **same codebase**. Contributors
-submit changes through branches and pull requests; operators should use only
-reviewed, tagged releases when a production-ready release eventually exists.
-There is no separate "developer edition" and "operator edition."
+> Software should make financial choice possible, not demand permission to
+> participate. Inspect the code, challenge its assumptions, improve it, and
+> operate responsibly.
 
-## Features and design
+## Why this exists
 
-- Telegram-based buy and sell order workflows.
-- Lightning escrow and payout integration with Coinos.
-- Direct fiat settlement between counterparties; no fiat custody by the bot.
-- Operator administration, disputes and recovery workflows.
-- Local SQLite trade and royalty accounting.
-- No requirement for the bot to collect identity or bank account details.
-- Source-available code with an independent-operator royalty model.
+For many people, access to Bitcoin is constrained not by the protocol but by
+the surrounding financial infrastructure: custodial exchanges, identity
+requirements, blocked services, payment intermediaries, and unreliable access
+to markets. BIFp2p seeks to lower those barriers.
 
-The user-facing Telegram messages in the current source include Persian text.
-**This repository's project documentation is English only.** The user interface
-has not yet been fully internationalized.
+The design principles are:
 
-## Royalty model
+- **Direct exchange.** Buyers and sellers settle fiat with one another.
+- **Minimal collection.** The bot does not require identity documents or
+  collect banking credentials for its own operation.
+- **Bitcoin over Lightning.** Trades use Lightning invoices for Bitcoin
+  escrow and payout.
+- **Independent operation.** Communities can eventually run separate
+  deployments using their own infrastructure and Coinos accounts.
+- **Verifiable behavior.** Source access, tests, and explicit accounting make
+  the system open to inspection, criticism, and improvement.
+- **Accountability.** A visible project origin, clear operator identity, and
+  a sustainable royalty model should coexist with the ability to modify code.
 
-An independent operator uses their **own** bot credentials, Coinos account and
-infrastructure. For each legitimately completed trade, the project royalty is
-0.1% of the original Bitcoin amount, rounded down to whole satoshis:
+BIFp2p does **not** promise anonymity, trustlessness, or zero counterparty
+risk. The current Lightning escrow uses **Coinos**, a third-party custodial
+service. Fiat settlement is outside the bot, and disputes can still require
+human intervention. Telegram and Coinos have their own privacy and
+availability limitations.
+
+## How a trade works
+
+1. A seller or buyer creates an offer specifying a Bitcoin amount and a
+   fiat price or pricing method.
+2. The offer is published in the operator's configured Telegram channel.
+3. A counterparty accepts the offer.
+4. The seller funds a Coinos Lightning escrow invoice.
+5. Once Bitcoin funding is confirmed, the parties arrange fiat settlement
+   directly between themselves.
+6. After the required confirmations, the bot attempts the Lightning payout
+   to the buyer and records the final trade state.
+7. Failed, cancelled, disputed, or ambiguous outcomes follow separate
+   recovery paths. A payment of uncertain status must never be blindly
+   repeated.
+
+This is a description of the intended workflow, not a claim that every
+failure scenario has been proven safe.
+
+## One project, one shared codebase
+
+Developers and independent operators use **the same source tree**.
+
+**Developers** review code, submit pull requests, write tests, examine
+financial edge cases, and propose improvements.
+
+**Operators** will be able to deploy reviewed releases using their own
+Telegram bot, channel, administrator identity, price service, and Coinos
+credentials. They are responsible for their users, infrastructure, funds,
+dispute handling, and compliance with applicable law.
+
+There is no separate developer edition and no separate operator edition.
+Development branches and tagged releases are stages of one project.
+
+## Project identity and attribution
+
+BIFp2p was created under the **Bitcoin Is Freedom** initiative. The origin
+must remain clear when others inspect, fork, modify, or redistribute the code.
+
+Project attribution should appear in:
+
+- The repository README, license and source notices.
+- An accessible **About / Project origin** view in the bot interface.
+- Appropriate documentation for derivative deployments.
+
+Independent operators must be free to identify **their own** service and
+support channels. Attribution must not impersonate an official service,
+silently redirect customers to the original operator, or interfere with
+independent configuration. The original project's attribution and an
+operator's own identity are different things.
+
+The original project is associated with
+[Bitcoin Is Freedom](https://t.me/BitcoinIsFreedom) and
+[Paul](https://github.com/Paulmeloux).
+
+**Implementation note:** Persistent attribution inside all bot interfaces
+is a design requirement, not yet a verified implementation claim. The
+existing UI still contains Persian messages and some community-specific
+references. Those need to be localized and separated from operator identity
+before an English-only operator release.
+
+## Fees and project sustainability
+
+The current design charges a seller-side operator commission determined by
+the seller's reputation tier. The buyer does not pay an additional BIFp2p
+royalty.
+
+Independent operators owe the original BIFp2p project **0.1% of the original
+Bitcoin amount of each successfully completed trade**, rounded down to
+whole satoshis:
 
 `royalty_sats = original_amount_sats // 1000`
 
-The royalty is paid **from the operator's existing commission**, not as an
-additional fee to the buyer or seller. Intended beneficiary:
-`bitcoinisfreedombot@coinos.io`.
+This royalty comes **out of the operator's existing commission**; it is not
+an additional charge to the buyer or seller.
 
-**Current implementation is accounting-only.** `ACCOUNTING_TEST` records local
-obligations but does not pay them. `PRODUCTION_ENFORCED` blocks new orders
-because real royalty payment transport is disabled. Neither mode currently
-authorizes live commercial operation. See [SECURITY.md](SECURITY.md) and
-[the release gate](docs/RELEASE_GATE.md).
+**Project royalty beneficiary:** `bitcoinisfreedombot@coinos.io`
 
-## Offline development
+Refunded, cancelled, and failed trades do not generate completed-trade
+royalties. The implementation maintains a local obligation ledger, but
+royalty payment transport is **not implemented or enabled**. An accounting
+entry is not proof of payment.
 
-1. Clone this repository and create a development branch.
-2. Use a supported Python environment and install dependencies from the
-   repository's requirements file.
-3. Run the offline tests: `python -m unittest discover -s tests -v`.
-4. Run syntax checks: `python -m compileall -q .`.
-5. Submit a pull request with test coverage and an explanation of financial
-   safety implications.
+## Technology and architecture
 
-**Do not connect a real Coinos wallet or Telegram production bot for testing.**
-The `.env.example` file documents configuration keys but is not loaded
-automatically. No safe production deployment guide exists yet.
+- **Python** and `python-telegram-bot` for the Telegram interface.
+- **SQLite** for orders, recovery state, and royalty accounting.
+- **Coinos API** for custodial Lightning invoice and payment operations.
+- **Telegram channels** for publishing orders and handling counterparties.
+- **Operator-defined market-price API** for reference pricing.
+- **Offline automated tests** for key accounting and workflow invariants.
 
-## Security and limitations
+Sensitive credentials belong in the operator's environment, never in source
+control. The `.env.example` file is an illustrative configuration template
+and is not automatically loaded.
 
-- Never commit API tokens, private keys, user data, SQLite databases or logs.
-- Core operator identifiers now use environment configuration; embedded
-  community references in user-facing messages still need review and localization.
-- An uncertain payout must never be retried blindly.
-- Offline unit tests are not a security audit.
-- Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
+## Current development status
 
-## License status
+**This repository is a development preview. Do not deploy with real funds.**
 
-A proposed source-available license is in [LICENSE-DRAFT](LICENSE-DRAFT).
-It is **not yet approved or final**. Until a final license is published, do not
-assume permission to redistribute, modify for external distribution, or operate
-commercially. GitHub visibility alone does not grant these rights.
+The offline test suite has passed on the development branch. This is not a
+security audit or a guarantee of correct behavior with live Coinos services.
 
-## Project
+The production royalty payment transport is disabled. Production enforcement
+intentionally blocks new orders. Batch royalty accounting is still an
+isolated prototype. End-to-end verification of escrow, payouts, refunds,
+crash recovery, and ambiguous Coinos responses is required before a
+production release.
 
-- Community: https://t.me/BitcoinIsFreedom
-- Maintainer: https://github.com/Paulmeloux
-- Status: development preview; no production release
+See [SECURITY.md](SECURITY.md) and
+[docs/RELEASE_GATE.md](docs/RELEASE_GATE.md) for the current safety gate.
+
+## Contributing
+
+This project welcomes careful, security-minded review, especially of
+payment-state transitions, replay prevention, invoice handling, refunds,
+race conditions, privacy, and independent-operator configuration.
+
+1. Create a development branch from the shared repository.
+2. Install the dependencies listed in `requirements.txt`.
+3. Run `python -m unittest discover -s tests -p 'test_*.py' -v`.
+4. Run `python -m compileall -q .`.
+5. Open a pull request describing the change, its tests, and any financial
+   or privacy implications.
+
+Do not submit live credentials, user databases, private logs, or real wallet
+material. Do not test against third-party services or funds without
+authorization.
+
+## Licensing
+
+BIFp2p is intended to be **source-available**, not OSI-approved open source.
+The proposed terms permit source review, modifications and independent
+operation subject to attribution and an operator royalty.
+
+The proposed terms are currently in
+[LICENSE-DRAFT](LICENSE-DRAFT), **not a finalized license**. Until a final
+license is approved and published, GitHub access alone does not grant a
+general right to redistribute or commercially operate the software.
+
+## A note on independence
+
+A community does not become financially independent merely by installing a
+bot. It must be able to understand the risks, audit the code, run its own
+infrastructure, and hold its own operators accountable.
+
+BIFp2p is an attempt to make that possible, one trade and one improvement at
+a time.
+
+**Bitcoin Is Freedom**  
+[Community](https://t.me/BitcoinIsFreedom) ·
+[Original maintainer](https://github.com/Paulmeloux) ·
+[Canonical repository](https://github.com/Paulmeloux/BIFp2p-public)
