@@ -1,21 +1,18 @@
-# Royalty recipient configuration
+# Royalty recipient and operator wallet separation
 
-Confirmed by the operator on 2026-10-16:
+Operator clarification, 2026-10-16:
 
-- Lightning address: `bitcoinisfreedombot@coinos.io`
-- Coinos account public URL: `https://coinos.io/bitcoinisfreedombot`
-- Coinos account username (derived from the address and URL): `bitcoinisfreedombot`
+- **Fixed BIFp2p royalty beneficiary**: `bitcoinisfreedombot@coinos.io` (Coinos username: `bitcoinisfreedombot`; public account URL: `https://coinos.io/bitcoinisfreedombot`).
+- **Independent operator wallet**: each third-party operator who deploys the publicly released, source-available BIFp2p software configures their **own** Coinos trading/escrow account and credentials. Never ship the creator's Coinos credentials in a public distribution.
+- **Royalty policy**: 0.1% of the original amount of each successfully completed trade, calculated in integer satoshis as `original_amount_sats // 1000`. This is funded by the third-party operator from its existing commission, not charged as an extra user fee.
+- **Creator's own installation**: the creator's operational trading wallet is also the royalty beneficiary account. It is not a third-party licensee and must not submit a transfer from that wallet to itself.
 
-The operator states that this **same Coinos account is already the BIFp2p trading bot's wallet**.
+## Required configuration and safety behavior
 
-## Critical self-payment safeguard
+1. Keep the royalty destination as a **creator-controlled fixed beneficiary** in the distributed product. Operator trading credentials and wallets must be configured separately. Never conflate operator credentials with beneficiary identity.
+2. Detect the creator's own installation / beneficiary-account self-transfer case using authenticated wallet identity, not merely an operator-supplied arbitrary username. Do not falsely mark an actual transfer as paid; if the creator is exempt, represent that exemption explicitly in accounting and licensing rules.
+3. For a third-party operator, create one obligation per completed trade; a batch may settle multiple obligations to the fixed beneficiary. A payout is confirmed only after verified Coinos evidence. An ambiguous payout remains `UNKNOWN` and must never be automatically re-sent.
+4. Source-available distribution does not itself guarantee enforcement: a modified client can bypass local checks. Any royalty mechanism is partly a contractual obligation; do not claim tamper-proof payment enforcement.
+5. Do not enable live payments until the deployed Coinos contract, reconciliation, production batch integration, and legal license are reviewed.
 
-Do not initiate a royalty transfer from this account to itself. An internal self-transfer may fail, be a no-op, or create misleading settlement records. Do not mark royalty obligations as PAID based on such a transaction.
-
-The royalty ledger may record this as the operator-designated beneficiary account, but automated settlement must remain disabled until the source and destination account identities are distinct and a safe Coinos payment/reconciliation contract has been verified.
-
-This document contains only public account identifiers. Never commit API tokens, authentication material, or private wallet credentials.
-
-## Outstanding decision
-
-To implement real outgoing royalty payments, provide a **separate** recipient Coinos account (or a distinct Lightning recipient), or explicitly adopt an accounting-only model where royalties remain in the operator's account and are *not* represented as paid out. A change in business model or license terms requires operator approval.
+No secret, token, or private credential belongs in this file.
