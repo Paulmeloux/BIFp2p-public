@@ -49,19 +49,19 @@ BUYER_PAYOUT_PROCESSING_STALE_SECONDS = _nonnegative_environment_integer(
 )
 
 
-CHANNEL_ID = "@BitcoinIsFreedom"
+CHANNEL_ID = os.getenv("BIFP2P_CHANNEL_ID", "").strip()
 
 
-OFFICIAL_CHANNEL_ID = "@BitcoinIsFreedom"
+OFFICIAL_CHANNEL_ID = os.getenv("BIFP2P_OFFICIAL_CHANNEL_ID", CHANNEL_ID).strip()
 
 
-OFFICIAL_CHANNEL_URL = "https://t.me/BitcoinIsFreedom"
+OFFICIAL_CHANNEL_URL = os.getenv("BIFP2P_OFFICIAL_CHANNEL_URL", "").strip()
 
 
-OFFICIAL_GROUP_ID = "@BitcoinIsFreedomGroup"
+OFFICIAL_GROUP_ID = os.getenv("BIFP2P_OFFICIAL_GROUP_ID", "").strip()
 
 
-BOT_USERNAME = "BitcoinIsFreedombot"
+BOT_USERNAME = os.getenv("BIFP2P_BOT_USERNAME", "").strip().lstrip("@")
 
 
 
@@ -80,7 +80,7 @@ OPEN_ORDER_LIFETIME_SECONDS = 12 * 60 * 60
 ORDER_TIMEOUT_POLL_SECONDS = 30
 
 
-MARKET_PRICE_API_URL = os.getenv("MARKET_PRICE_API_URL", "https://bifp2p.slipbox.uk/price")
+MARKET_PRICE_API_URL = os.getenv("MARKET_PRICE_API_URL", "").strip()
 
 
 MARKET_PRICE_TIMEOUT_SECONDS = 8
@@ -203,7 +203,7 @@ DB_PATH = os.getenv("BIFP2P_DB_PATH", "users.db")
 SELLER_INVOICE_PAYMENT_SECONDS = 20 * 60
 
 
-ADMIN_ID = 94479097
+ADMIN_ID = _nonnegative_environment_integer("BIFP2P_ADMIN_ID", 0)
 
 
 SUPPORT_NOTIFICATION_PREFIX = "🛟 درخواست پشتیبانی جدید"
@@ -222,6 +222,12 @@ SUPPORT_MESSAGE = 12
 
 
 def validate_runtime_config():
+    required = {"BIFP2P_CHANNEL_ID": CHANNEL_ID, "BIFP2P_OFFICIAL_CHANNEL_URL": OFFICIAL_CHANNEL_URL, "BIFP2P_BOT_USERNAME": BOT_USERNAME, "MARKET_PRICE_API_URL": MARKET_PRICE_API_URL}
+    missing = [key for key, value in required.items() if not value]
+    if ADMIN_ID <= 0:
+        missing.append("BIFP2P_ADMIN_ID")
+    if missing:
+        raise RuntimeError("Missing operator configuration: " + ", ".join(missing))
     if ROYALTY_MODE not in ("ACCOUNTING_TEST", "PRODUCTION_ENFORCED"):
         raise RuntimeError(
             "ROYALTY_MODE must be ACCOUNTING_TEST or PRODUCTION_ENFORCED"
