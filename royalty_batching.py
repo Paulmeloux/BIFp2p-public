@@ -103,3 +103,60 @@ def mark_batch_unknown(conn, batch_id, now=None):
     except Exception:
         conn.rollback()
         raise
+
+def recover_in_flight_batches(conn, now=None):
+    """After a crash, quarantine every uncertain batch; never retry it."""
+    now = int(time.time()) if now is None else int(now)
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        ids = [row[0] for row in conn.execute(
+            "SELECT id FROM royalty_batches WHERE status='IN_FLIGHT'"
+        ).fetchall()]
+        for batch_id in ids:
+            conn.execute(
+                "UPDATE royalty_batches SET status='UNKNOWN', updated_at_unix=? "
+                "WHERE id=? AND status='IN_FLIGHT'", (now, batch_id)
+            )
+            conn.execute(
+                "UPDATE royalty_batch_attempts SET status='UNKNOWN', "
+                "resolved_at_unix=? WHERE batch_id=? AND status='IN_FLIGHT'",
+                (now, batch_id)
+            )
+        conn.commit()
+        return len(ids)
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def claim_batch_for_offline_test(conn, batch_id, request_fingerprint, now=None):
+    """Reserve exactly one simulated attempt. Does not transmit payments.
+
+    An IN_FLIGHT or UNKNOWN batch cannot be claimed again. The caller must
+    supply a stable request fingerprint and an idle SQLite connection.
+    """
+    if not isinstance(request_fingerprint, str) or len(request_fingerprint) != 64:
+        raise ValueError("64-character request fingerprint required")
+    if any(ch not in "0123456789abcdef" for ch in request_fingerprint):
+        raise ValueError("invalid fingerprint")
+    now = int(time.time()) if now is None else int(now)
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        cur = conn.execute(
+            "UPDATE royalty_batches SET status='IN_FLIGHT',updated_at_unix=? "
+            "WHERE id=? AND status='PREPARED'", (now, batch_id)
+        )
+        if cur.rowcount != 1:
+            conn.rollback()
+            return False
+        conn.execute(
+            "INSERT INTO royalty_batch_attempts "
+            "(batch_id,status,request_fingerprint,started_at_unix) "
+            "VALUES (?,'IN_FLIGHT',?,?)",
+            (batch_id, request_fingerprint, now)
+        )
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        raise
