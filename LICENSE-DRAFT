@@ -1,5 +1,5 @@
 BIFp2p Source-Available License v1.0 — REVIEW DRAFT
-Copyright (c) 2026 BIFp2p contributors. Original project: https://github.com/Paulmeloux
+Copyright (c) 2026 BIFp2p contributors. Original project: Bitcoin Is Freedom | https://github.com/Paulmeloux/BIFp2p-public
 
 IMPORTANT: THIS IS A PROPOSED LICENSE, NOT A FINAL LEGAL INSTRUMENT.
 Do not distribute under these terms until the copyright holder approves them
@@ -31,6 +31,9 @@ rounded down to whole satoshis (original_amount_sats // 1000).
 The royalty is an expense of the Operator and must not be represented as an
 additional charge imposed by BIFp2p on end users. Payment beneficiary:
 bitcoinisfreedombot@coinos.io.
+A royalty obligation arises only after a trade is finally recorded COMPLETED.
+No royalty arises for refunded, cancelled, or failed trades.
+The same completed trade must not be charged twice.
 An accounting-only test configuration is not payment or royalty compliance.
 A failed or uncertain payment must not be represented as settled.
 
@@ -52,7 +55,7 @@ INCLUDING LOSS OF FUNDS, ARISING FROM USE OF THE SOFTWARE.
 Rights under this license terminate on material breach, subject to any
 mandatory applicable law. Termination does not erase accrued royalties.
 
-Open legal decisions before approval:
+Open legal decisions requiring the copyright holder's explicit approval before publication:
 - Identify the correct copyright owner and contributor licensing terms.
 - Define payment interval, due date, acceptable proof, disputes and remedies.
 - Determine governing law and jurisdiction.
