@@ -7,6 +7,12 @@ import re
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from settings import BOT_USERNAME, GUIDE_BUTTON_TEXT, SUPPORT_BUTTON_TEXT, TOKEN
+from project_identity import PROJECT_ATTRIBUTION
+
+
+def project_about_text():
+    """Visible, operator-independent attribution for an About command/view."""
+    return PROJECT_ATTRIBUTION
 
 
 def main_menu():
