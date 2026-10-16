@@ -89,7 +89,7 @@ must remain clear when others inspect, fork, modify, or redistribute the code.
 Project attribution should appear in:
 
 - The repository README, license and source notices.
-- An accessible **About / Project origin** view in the bot interface.
+- The bot's `/about` command, which displays the original source and community.
 - Appropriate documentation for derivative deployments.
 
 Independent operators must be free to identify **their own** service and
@@ -102,11 +102,11 @@ The original project is associated with
 [Bitcoin Is Freedom](https://t.me/BitcoinIsFreedom) and
 [Paul](https://github.com/Paulmeloux).
 
-**Implementation note:** Persistent attribution inside all bot interfaces
-is a design requirement, not yet a verified implementation claim. The
-existing UI still contains Persian messages and some community-specific
-references. Those need to be localized and separated from operator identity
-before an English-only operator release.
+**Implementation note:** The bot now has a `/about` attribution command.
+Attribution in every relevant user-facing view has not been implemented or
+verified. The existing UI still contains Persian messages and some
+community-specific references. Those need to be localized and separated from
+operator identity before an English-only operator release.
 
 ## Fees and project sustainability
 
