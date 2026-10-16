@@ -95,86 +95,48 @@ REPOST_CLAIM_STALE_SECONDS = 5 * 60
 
 
 OPEN_ORDER_EXPIRATION_MESSAGE = (
-    "⏳ سفارش شما طی ۱۲ ساعت گذشته توسط کسی پذیرفته نشد و از کانال حذف شد.\n\n"
-    "در صورت تمایل می‌توانید با اعمال تغییرات لازم، سفارش جدیدی ثبت کنید."
+    "Your order expired after 12 hours without a counterparty and was removed "
+    "from the channel. You can create a new order."
 )
 
+SUPPORT_BUTTON_TEXT = "Support"
+GUIDE_BUTTON_TEXT = "Guide and rules"
 
-SUPPORT_BUTTON_TEXT = "🆘 پشتیبانی"
+GUIDE_TEXT = """<b>BIFp2p | Guide and rules</b>
 
+BIFp2p helps people exchange Bitcoin directly using Lightning.
+Buyers and sellers settle fiat directly with one another. Coinos is used
+as a custodial Lightning escrow and payout provider; this is not a
+trustless or anonymous service.
 
+<b>Creating an order</b>
+Choose Buy or Sell, enter the amount in satoshis, select market-based
+or fixed pricing, and confirm the offer. The operator publishes orders
+in their configured Telegram channel. A Telegram username is required.
 
+Order size: 10,000 to 100,000 satoshis.
 
-GUIDE_BUTTON_TEXT = "📜 راهنما و قوانین"
+<b>Fees and reputation</b>
+The seller pays the operator commission, determined when the offer is
+accepted and locked for that trade. The buyer pays no BIFp2p fee.
+Seller commission tiers based on reputation: 1%, 0.9%, 0.8%, 0.7%,
+0.6%, or 0.5%. The original project's 0.1% royalty is paid from
+the operator's commission, not added to either trader's fee.
 
+<b>Safety</b>
+Confirm a fiat transfer only after it actually happens. If a dispute
+arises, stop and contact your operator's support. Do not share identity
+documents or banking credentials with the bot. Counterparties may
+choose to share settlement details directly; protect that information.
+Telegram, Coinos, and your trading partner introduce additional risks.
 
-GUIDE_TEXT = """<b>راهنمای استفاده:</b>
-
-بات BIFp2p ابزاری برای خرید و فروش همتا به همتای بیتکوین با تسویه Lightning است.
-
-برای خرید یا فروش بیتکوین گزینه مربوط را انتخاب کنید، مقدار ساتوشی، روش قیمت‌گذاری و در صورت نیاز توضیحات سفارش را وارد کنید. قیمت می‌تواند بازار، درصدی بالاتر از بازار یا قیمت دلخواه باشد.
-
-برای استفاده از بات، داشتن نام کاربری (Username) تلگرام الزامی است و نیازی به عضویت در کانال نیست. سفارش‌های خرید و فروش در کانال بیتکوین راه آزادی @BitcoinIsFreedom منتشر می‌شوند. پس از پذیرفته‌شدن سفارش توسط طرف مقابل، بات مرحله به مرحله شما را تا پایان معامله راهنمایی خواهد کرد.
-
-حداقل مقدار هر سفارش 10,000 ساتوشی و حداکثر 100,000 ساتوشی است.
-
-اگر در هر مرحله با مشکلی مواجه شدید از بخش پشتیبانی بخواهید شما را راهنمایی کند.
-
-برای تبادل تجربه، همفکری و کمک به بهبود بات میتوانید عضو گروه BIFChat شوید:
-https://t.me/BitcoinIsFreedomChat
-
-<b>سیستم اعتبار:</b>
-
-امتیاز کاربران بر اساس سابقه فعالیت و عضویت اختیاری در کانال محاسبه میشود.
-
-عضویت در کانال بیتکوین راه آزادی: 1,000 امتیاز
-
-هر معامله موفق: 100 امتیاز
-به ازای هر ساتوشی معامله موفق: 1 امتیاز
-
-معاملات ناقص یا لغوشده امتیاز مثبت ایجاد نمیکنند.
-
-در صورتی که پس از انتقال بیتکوین به بات یکی از طرفین بدون ارائه توضیح قابل قبول به پشتیبانی باعث لغو معامله و اتلاف وقت و هزینه طرفین شود، پس از بررسی پشتیبانی ممکن است 1,000 امتیاز از اعتبار او کسر شود.
-
-امتیاز کاربر هنگام انتشار سفارش بدون نمایش هویت او به‌صورت عمومی نمایش داده میشود.
-
-با افزایش اعتبار، کارمزد فروشنده کاهش پیدا میکند.
-
-<b>کارمزد:</b>
-
-کارمزد فقط از فروشنده بیتکوین دریافت میشود و بر اساس امتیاز فروشنده در لحظه پذیرش سفارش محاسبه و برای همان معامله قفل میشود.
-
-کمتر از 100,000 امتیاز: 1%
-از 100,000 امتیاز: 0.9%
-از 200,000 امتیاز: 0.8%
-از 300,000 امتیاز: 0.7%
-از 400,000 امتیاز: 0.6%
-از 500,000 امتیاز به بالا: 0.5%
-
-خریدار هیچ کارمزدی پرداخت نمیکند.
-
-<b>قوانین و امنیت:</b>
-
-معاملات بیتکوین در این بات از طریق Lightning انجام میشوند.
-پرداخت فیات مستقیما میان خریدار و فروشنده انجام میشود.
-تا زمانی که واقعا پرداخت یا دریافت وجه انجام نشده گزینه تأیید مربوط به آن مرحله را انتخاب نکنید.
-در صورت بروز اختلاف فرآیند معامله را متوقف کرده و به پشتیبانی پیام دهید.
-
-بات BIFp2p برای استفاده از خدمات خود از کاربران KYC، اطلاعات هویتی یا اطلاعات بانکی درخواست نمیکند.
-
-ممکن است در جریان معامله خریدار و فروشنده برای انجام پرداخت فیات اطلاعات هویتی یا بانکی خود را مستقیما با یکدیگر مبادله کنند.
-
-نگهداری و حفاظت از این اطلاعات مسئولیتی خطیر بر عهده طرفین معامله است.
-
-اطلاعات هویتی و بانکی طرف مقابل را در اختیار دیگران قرار ندهید و پس از تکمیل کامل معامله اطلاعات طرف مقابل را حذف کنید.
-
-<b>درباره BIFp2p:</b>
-
-بات BIFp2p برای تسهیل مبادله مستقیم بیتکوین میان افراد، گسترش استقلال مالی و کاهش وابستگی به واسطه‌های متمرکز ساخته شده است.
-
-هدف این پروژه کمک به گسترش استفاده از بیتکوین به‌عنوان پولی کمیاب، غیرمتمرکز و یکی از مهندسی‌شده‌ترین اشکال پول در تاریخ است.
+<b>Project origin</b>
+BIFp2p was created by Paul under Bitcoin Is Freedom.
+Original project: https://t.me/BitcoinIsFreedom
+Source: https://github.com/Paulmeloux/BIFp2p-public
+Use /about for project attribution. Your operator is independent from
+the original project unless explicitly stated otherwise.
 """
-
 
 AMOUNT, PRICE_METHOD, PRICE, PRICE_PERCENT, DESCRIPTION, CONFIRM = range(6)
 
@@ -208,13 +170,13 @@ SELLER_INVOICE_PAYMENT_SECONDS = 20 * 60
 ADMIN_ID = _nonnegative_environment_integer("BIFP2P_ADMIN_ID", 0)
 
 
-SUPPORT_NOTIFICATION_PREFIX = "🛟 درخواست پشتیبانی جدید"
+SUPPORT_NOTIFICATION_PREFIX = "New support request"
 
 
-SUPPORT_ACK_PREFIX = "✅ پیام شما برای پشتیبانی ارسال شد."
+SUPPORT_ACK_PREFIX = "Your message has been sent to support."
 
 
-SUPPORT_REPLY_PREFIX = "🛟 پاسخ پشتیبانی"
+SUPPORT_REPLY_PREFIX = "Support reply"
 
 
 SUPPORT_MESSAGE = 12
