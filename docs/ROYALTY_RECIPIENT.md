@@ -1,18 +1,21 @@
-# Royalty recipient and operator wallet separation
+# Public BIFp2p distribution: operator wallets and royalty beneficiary
 
-Operator clarification, 2026-10-16:
+Scope: **the separate source-available public distribution only**. The creator's already-running private production installation is out of scope. Do not discuss, migrate, configure, test against, or modify that installation as part of the public release.
 
-- **Fixed BIFp2p royalty beneficiary**: `bitcoinisfreedombot@coinos.io` (Coinos username: `bitcoinisfreedombot`; public account URL: `https://coinos.io/bitcoinisfreedombot`).
-- **Independent operator wallet**: each third-party operator who deploys the publicly released, source-available BIFp2p software configures their **own** Coinos trading/escrow account and credentials. Never ship the creator's Coinos credentials in a public distribution.
-- **Royalty policy**: 0.1% of the original amount of each successfully completed trade, calculated in integer satoshis as `original_amount_sats // 1000`. This is funded by the third-party operator from its existing commission, not charged as an extra user fee.
-- **Creator's own installation**: the creator's operational trading wallet is also the royalty beneficiary account. It is not a third-party licensee and must not submit a transfer from that wallet to itself.
+## Roles
 
-## Required configuration and safety behavior
+- **Independent operator**: anyone who deploys the distributed BIFp2p code configures their own Coinos wallet, credentials, and operational settings.
+- **Fixed royalty beneficiary**: the project receives royalties at `bitcoinisfreedombot@coinos.io` (Coinos username `bitcoinisfreedombot`; public URL `https://coinos.io/bitcoinisfreedombot`).
+- **Contributors**: developers may review and improve the public code according to the applicable source-available license and contribution terms.
 
-1. Keep the royalty destination as a **creator-controlled fixed beneficiary** in the distributed product. Operator trading credentials and wallets must be configured separately. Never conflate operator credentials with beneficiary identity.
-2. Detect the creator's own installation / beneficiary-account self-transfer case using authenticated wallet identity, not merely an operator-supplied arbitrary username. Do not falsely mark an actual transfer as paid; if the creator is exempt, represent that exemption explicitly in accounting and licensing rules.
-3. For a third-party operator, create one obligation per completed trade; a batch may settle multiple obligations to the fixed beneficiary. A payout is confirmed only after verified Coinos evidence. An ambiguous payout remains `UNKNOWN` and must never be automatically re-sent.
-4. Source-available distribution does not itself guarantee enforcement: a modified client can bypass local checks. Any royalty mechanism is partly a contractual obligation; do not claim tamper-proof payment enforcement.
-5. Do not enable live payments until the deployed Coinos contract, reconciliation, production batch integration, and legal license are reviewed.
+## Commercial terms proposed for the public distribution
 
-No secret, token, or private credential belongs in this file.
+- Royalty: 0.1% of each successfully completed trade's original amount, rounded down to whole satoshis (`amount_sats // 1000`).
+- The operator funds the royalty from their own existing commission, not as an extra fee to end users.
+- Each independent operator uses their own wallet to pay the fixed beneficiary.
+- The fixed beneficiary address is public; no Coinos tokens or secrets from any account are included in the source code.
+- A local software check is not tamper-proof enforcement; the royalty is also a contractual obligation under the eventual license.
+
+## Release boundary
+
+This document defines the intended architecture, not a claim that automated royalty settlement is already operational. Keep live payment transport disabled until production-grade accounting integration, Coinos API verification, reconciliation tests, and license review are complete. The creator's private production system must remain separate and unchanged.
