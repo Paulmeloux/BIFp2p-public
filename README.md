@@ -1,48 +1,89 @@
 # BIFp2p
 
-Private staging repository for the standalone BIFp2p Lightning P2P Telegram bot.
+**Source-available development preview | Lightning P2P trading on Telegram**
 
-**Not ready for public release or production deployment.** The standalone code requires security review, dependency checks, and end-to-end testing.
+BIFp2p is a Telegram-based peer-to-peer Bitcoin trading bot. Traders arrange fiat
+settlement directly with each other, while the application coordinates Lightning
+escrow and payout through Coinos. The project is intended to help independent
+developers inspect and improve the code and, once the financial safety gates are
+completed, allow independent operators to deploy their own instances.
 
-## Royalty accounting phase
+**WARNING: NOT READY FOR LIVE FUNDS OR PRODUCTION DEPLOYMENT.** Royalty
+payment transport is disabled; the Coinos payment reconciliation contract and
+end-to-end safety of escrow, refunds and payouts have not been fully verified.
+This repository is provided for code review and offline development.
 
-This staging copy records one durable royalty obligation for each legitimately
-completed trade. The amount is `original_amount_sats // 1000` and is accounted
-within the operator's existing commission; buyer payouts and seller charges are
-unchanged.
+## One codebase, two roles
 
-`ROYALTY_MODE` has no operational default and must be explicitly configured:
+Developers and independent operators use the **same codebase**. Contributors
+submit changes through branches and pull requests; operators should use only
+reviewed, tagged releases when a production-ready release eventually exists.
+There is no separate "developer edition" and "operator edition."
 
-- `ACCOUNTING_TEST` records obligations for offline evaluation only. It never
-  sends royalty payments and is not a commercially compliant configuration. It
-  will not start unless `ROYALTY_ACCOUNTING_TEST_ACK` is exactly
-  `I_UNDERSTAND_ACCOUNTING_TEST_IS_NOT_PRODUCTION`.
-- `PRODUCTION_ENFORCED` fails closed for new order creation and acceptance.
-  Actual royalty transport is deliberately disabled in this phase, so this mode
-  cannot open the new-trade gate yet. Existing settlement, recovery,
-  cancellation, and dispute paths remain available.
+## Features and design
 
-A syntactically valid `ROYALTY_DESTINATION_KIND` and `ROYALTY_DESTINATION` are
-required to open the accounting-test new-trade gate. The destination is stored
-locally with each obligation and is not sent anywhere. Administrators can use
-`/royalty_status` for local status reporting; no telemetry is implemented.
+- Telegram-based buy and sell order workflows.
+- Lightning escrow and payout integration with Coinos.
+- Direct fiat settlement between counterparties; no fiat custody by the bot.
+- Operator administration, disputes and recovery workflows.
+- Local SQLite trade and royalty accounting.
+- No requirement for the bot to collect identity or bank account details.
+- Source-available code with an independent-operator royalty model.
 
-Database migration creates the royalty ledger without retroactively charging
-trades completed before the migration epoch. A post-migration successful trade
-without its obligation closes the new-trade gate until the inconsistency is
-investigated. Reconciled cancellation refunds use the distinct `REFUNDED`
-terminal state and never create royalty or successful-trade reputation.
+The user-facing Telegram messages in the current source include Persian text.
+**This repository's project documentation is English only.** The user interface
+has not yet been fully internationalized.
 
-## Staging limitations
+## Royalty model
 
-This is a private staging milestone, not a public release. The Coinos payment
-and history response contract used by payout reconciliation has not yet been
-verified against authoritative Coinos documentation. Payouts with an ambiguous
-outcome remain `UNKNOWN` and require read-only reconciliation or authorized
-manual review; they are never automatically retried. Production or any
-payment-enabled deployment is not approved.
+An independent operator uses their **own** bot credentials, Coinos account and
+infrastructure. For each legitimately completed trade, the project royalty is
+0.1% of the original Bitcoin amount, rounded down to whole satoshis:
 
-Project: https://t.me/BitcoinIsFreedom
-Maintainer: https://github.com/Paulmeloux
+`royalty_sats = original_amount_sats // 1000`
 
-License and deployment instructions will be added after review.
+The royalty is paid **from the operator's existing commission**, not as an
+additional fee to the buyer or seller. Intended beneficiary:
+`bitcoinisfreedombot@coinos.io`.
+
+**Current implementation is accounting-only.** `ACCOUNTING_TEST` records local
+obligations but does not pay them. `PRODUCTION_ENFORCED` blocks new orders
+because real royalty payment transport is disabled. Neither mode currently
+authorizes live commercial operation. See [SECURITY.md](SECURITY.md) and
+[the release gate](docs/RELEASE_GATE.md).
+
+## Offline development
+
+1. Clone this repository and create a development branch.
+2. Use a supported Python environment and install dependencies from the
+   repository's requirements file.
+3. Run the offline tests: `python -m unittest discover -s tests -v`.
+4. Run syntax checks: `python -m compileall -q .`.
+5. Submit a pull request with test coverage and an explanation of financial
+   safety implications.
+
+**Do not connect a real Coinos wallet or Telegram production bot for testing.**
+The `.env.example` file documents configuration keys but is not loaded
+automatically. No safe production deployment guide exists yet.
+
+## Security and limitations
+
+- Never commit API tokens, private keys, user data, SQLite databases or logs.
+- Operator-specific identifiers are still embedded in the source and must be
+  refactored before third-party deployment.
+- An uncertain payout must never be retried blindly.
+- Offline unit tests are not a security audit.
+- Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
+
+## License status
+
+A proposed source-available license is in [LICENSE-DRAFT](LICENSE-DRAFT).
+It is **not yet approved or final**. Until a final license is published, do not
+assume permission to redistribute, modify for external distribution, or operate
+commercially. GitHub visibility alone does not grant these rights.
+
+## Project
+
+- Community: https://t.me/BitcoinIsFreedom
+- Maintainer: https://github.com/Paulmeloux
+- Status: development preview; no production release
