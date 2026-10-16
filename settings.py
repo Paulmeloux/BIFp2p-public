@@ -4,6 +4,8 @@ import os
 import re
 from decimal import Decimal
 
+from project_identity import PROJECT_ATTRIBUTION
+
 
 TOKEN = os.getenv("BOT_TOKEN")
 
