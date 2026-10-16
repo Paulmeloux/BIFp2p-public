@@ -1,7 +1,8 @@
 """Offline tests for the isolated royalty batching ledger."""
 import sqlite3
 import unittest
-from royalty_batching import (install_batch_schema, create_batch, mark_batch_unknown,\n    claim_batch_for_offline_test, recover_in_flight_batches)
+from royalty_batching import (install_batch_schema, create_batch, mark_batch_unknown,
+    claim_batch_for_offline_test, recover_in_flight_batches)
 
 class BatchLedgerTests(unittest.TestCase):
     def setUp(self):
