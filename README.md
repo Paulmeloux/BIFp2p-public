@@ -36,7 +36,7 @@ The design principles are:
 - **Bitcoin over Lightning.** Trades use Lightning invoices for Bitcoin
   escrow and payout.
 - **Independent operation.** Communities can eventually run separate
-  deployments using their own infrastructure and Coinos accounts.
+  deployments using their own infrastructure and escrow credentials. The royalty-paying wallet may be any compatible Lightning wallet.
 - **Verifiable behavior.** Source access, tests, and explicit accounting make
   the system open to inspection, criticism, and improvement.
 - **Accountability.** A visible project origin, clear operator identity, and
@@ -127,8 +127,11 @@ an additional charge to the buyer or seller.
 
 Refunded, cancelled, and failed trades do not generate completed-trade
 royalties. The implementation maintains a local obligation ledger, but
-royalty payment transport is **not implemented or enabled**. An accounting
-entry is not proof of payment.
+royalty payment transport is **not implemented or enabled**. Each trade's
+royalty is payable separately, without batching. Independent operators must
+configure a suitable Lightning wallet, compatible payment API, and payment
+verification mechanism to remit the fixed beneficiary. An accounting entry
+is not proof of payment. See [operator royalty requirements](docs/ROYALTY_RECIPIENT.md).
 
 ## Technology and architecture
 
@@ -151,8 +154,8 @@ The offline test suite has passed on the development branch. This is not a
 security audit or a guarantee of correct behavior with live Coinos services.
 
 The production royalty payment transport is disabled. Production enforcement
-intentionally blocks new orders. Batch royalty accounting is still an
-isolated prototype. End-to-end verification of escrow, payouts, refunds,
+intentionally blocks new orders. The previous batch royalty prototype is not part of the intended payment
+policy. Per-trade wallet-neutral payment remains an unconnected prototype. End-to-end verification of escrow, payouts, refunds,
 crash recovery, and ambiguous Coinos responses is required before a
 production release.
 
