@@ -21,6 +21,7 @@ from settings import (
 
 
 ROYALTY_DENOMINATOR = 1000
+FIXED_ROYALTY_DESTINATION = "bitcoinisfreedombot@coinos.io"
 ROYALTY_PAYMENT_TRANSPORT_ENABLED = False
 ROYALTY_MODES = ("ACCOUNTING_TEST", "PRODUCTION_ENFORCED")
 ROYALTY_BLOCKING_STATUSES = ("CONFIG_ERROR", "FAILED", "UNKNOWN")
@@ -41,17 +42,10 @@ def operator_commission_sats(original_amount_sats, fee_percent):
 
 
 def royalty_destination_is_valid(kind=None, destination=None):
+    """Accept only the original project's immutable Lightning Address."""
     kind = ROYALTY_DESTINATION_KIND if kind is None else str(kind).strip().upper()
-    destination = (
-        ROYALTY_DESTINATION if destination is None else str(destination).strip()
-    )
-    if not re.fullmatch(r"[A-Z][A-Z0-9_]{0,31}", kind or ""):
-        return False
-    if not destination or len(destination) > 512:
-        return False
-    if destination.upper().startswith("REPLACE_WITH_"):
-        return False
-    return not any(ord(character) < 32 or ord(character) == 127 for character in destination)
+    destination = ROYALTY_DESTINATION if destination is None else str(destination).strip()
+    return kind == "LIGHTNING_ADDRESS" and destination == FIXED_ROYALTY_DESTINATION
 
 
 def create_royalty_obligation(
