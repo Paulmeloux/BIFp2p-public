@@ -1,6 +1,6 @@
 # Royalty batching and Coinos reconciliation: implementation plan
 
-Status: DESIGN ONLY. No production transport, live payment, or deployment is authorized.
+Status: ISOLATED IMPLEMENTATION UNDER REVIEW. No live payment or deployment is authorized.
 
 ## Existing invariants
 
@@ -50,3 +50,24 @@ Never treat absence from one history page as proof of nonpayment. Never match on
 ## Release gate
 
 Keep all payment transport disabled and work on `dev/royalty-batching-reconciliation` only. Implement offline ledger and tests first. Run complete regression tests before any merge. No public release or production deployment without Coinos contract verification, a separate security review, and explicit operator approval.
+
+## October 2026 implementation checkpoint
+
+The branch now contains `royalty_transport.py`, a real HTTP request builder for
+Coinos internal payments, with fixed recipient `bitcoinisfreedombot`,
+HTTPS-only endpoint validation, disabled redirects, and a one-shot transport
+boundary. `royalty_batching.py` commits a durable IN_FLIGHT attempt before
+invoking a supplied transfer function. Any result, including a response with a
+remote payment ID, is quarantined as UNKNOWN until independently reconciled.
+Offline tests use fake transports only.
+
+**Not activated:** the bot does not call this transport, no worker has been
+wired to submit transfers, and `ROYALTY_PAYMENT_TRANSPORT_ENABLED` remains
+False. The route `/payments/internal` is inferred from Coinos upstream's
+`internal` handler but must be confirmed on the deployed server before use.
+No automated history reconciliation has been implemented. A payment ID returned
+by an HTTP POST is not proof that the intended recipient was credited.
+
+Do not enable transfers until the route, PIN requirements, response schema,
+authorization, settlement verification, and crash/backup recovery have been
+validated against an explicitly authorized disposable staging account.
