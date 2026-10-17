@@ -160,3 +160,52 @@ def claim_batch_for_offline_test(conn, batch_id, request_fingerprint, now=None):
     except Exception:
         conn.rollback()
         raise
+
+def submit_claimed_batch_once(conn, batch_id, transfer, now=None):
+    """One-shot payment orchestration for a PREPARED batch.
+
+    The caller supplies a transfer callable; no transport is enabled at bot
+    startup. A durable IN_FLIGHT claim is committed before calling transfer.
+    All outcomes remain UNKNOWN until separately reconciled with Coinos.
+    """
+    import hashlib
+    import json
+    from royalty_transport import (
+        ROYALTY_BENEFICIARY_USERNAME, royalty_transfer_fingerprint,
+    )
+    row = conn.execute(
+        "SELECT status,destination_kind,destination_snapshot,total_sats "
+        "FROM royalty_batches WHERE id=?", (batch_id,)
+    ).fetchone()
+    if row is None:
+        raise ValueError("batch not found")
+    status, kind, destination, amount = row
+    if status != "PREPARED":
+        return None
+    if kind != "COINOS_USERNAME" or destination != ROYALTY_BENEFICIARY_USERNAME:
+        raise ValueError("royalty beneficiary mismatch")
+    fingerprint = royalty_transfer_fingerprint(batch_id, amount)
+    if not claim_batch_for_offline_test(conn, batch_id, fingerprint, now):
+        return None
+    try:
+        receipt = transfer(amount)
+        if not isinstance(receipt, dict) or not isinstance(
+            receipt.get("payment_id"), str
+        ):
+            raise ValueError("missing remote payment identifier")
+        reference = receipt["payment_id"]
+    except Exception:
+        reference = None
+    # HTTP success is not confirmed settlement. Preserve the remote ID
+    # for manual reconciliation, and prohibit a second outgoing request.
+    mark_batch_unknown(conn, batch_id, now)
+    conn.execute(
+        "UPDATE royalty_batches SET payment_reference=? WHERE id=? "
+        "AND status='UNKNOWN'", (reference, batch_id)
+    )
+    conn.execute(
+        "UPDATE royalty_batch_attempts SET payment_reference=? WHERE "
+        "batch_id=? AND status='UNKNOWN'", (reference, batch_id)
+    )
+    conn.commit()
+    return {"status": "UNKNOWN", "payment_reference": reference}
