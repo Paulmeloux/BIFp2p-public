@@ -2,7 +2,7 @@
 import sqlite3
 import unittest
 from royalty_batching import (install_batch_schema, create_batch, mark_batch_unknown,
-    claim_batch_for_offline_test, recover_in_flight_batches)
+    claim_batch_for_offline_test, recover_in_flight_batches, submit_claimed_batch_once)
 
 class BatchLedgerTests(unittest.TestCase):
     def setUp(self):
@@ -87,6 +87,42 @@ class BatchLedgerTests(unittest.TestCase):
         batch = create_batch(self.db, "COINOS_USERNAME", "alice")
         with self.assertRaises(ValueError):
             claim_batch_for_offline_test(self.db, batch, "invalid")
+        self.assertEqual(self.db.execute(
+            "SELECT status FROM royalty_batches WHERE id=?", (batch,)
+        ).fetchone()[0], "PREPARED")
+
+    def test_one_shot_transfer_receipt_is_not_final_settlement(self):
+        self.add(1, destination="bitcoinisfreedombot")
+        batch = create_batch(self.db, "COINOS_USERNAME", "bitcoinisfreedombot")
+        calls = []
+        def fake_transfer(amount):
+            calls.append(amount)
+            return {"payment_id": "coin-remote-1"}
+        result = submit_claimed_batch_once(self.db, batch, fake_transfer)
+        self.assertEqual(result, {
+            "status": "UNKNOWN", "payment_reference": "coin-remote-1"
+        })
+        self.assertEqual(calls, [10])
+        self.assertIsNone(submit_claimed_batch_once(self.db, batch, fake_transfer))
+        self.assertEqual(calls, [10])
+
+    def test_timeout_cannot_trigger_second_payment(self):
+        self.add(1, destination="bitcoinisfreedombot")
+        batch = create_batch(self.db, "COINOS_USERNAME", "bitcoinisfreedombot")
+        calls = []
+        def timed_out(amount):
+            calls.append(amount)
+            raise TimeoutError("after remote acceptance")
+        result = submit_claimed_batch_once(self.db, batch, timed_out)
+        self.assertEqual(result["status"], "UNKNOWN")
+        self.assertIsNone(submit_claimed_batch_once(self.db, batch, timed_out))
+        self.assertEqual(calls, [10])
+
+    def test_wrong_recipient_cannot_be_paid(self):
+        self.add(1, destination="attacker")
+        batch = create_batch(self.db, "COINOS_USERNAME", "attacker")
+        with self.assertRaises(ValueError):
+            submit_claimed_batch_once(self.db, batch, lambda amount: None)
         self.assertEqual(self.db.execute(
             "SELECT status FROM royalty_batches WHERE id=?", (batch,)
         ).fetchone()[0], "PREPARED")
