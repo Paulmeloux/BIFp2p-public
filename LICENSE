@@ -125,6 +125,21 @@ falsifying settlement or bypassing enforcement to evade payment is prohibited.
 This clause does not represent a claim that the current development code
 already supplies a complete functioning payment integration.
 
+Before accepting real user trades, the Operator must test and evaluate a
+controlled real royalty-payment flow with Paul where he is available.
+If Paul is unavailable, the Operator must perform the validation independently
+by paying the fixed beneficiary, bitcoinisfreedombot@coinos.io, and verifying
+and recording the result. Paul's availability or acknowledgement is not a
+prerequisite for independently verified payment.
+
+Use operator-owned funds for this validation and verify the configured payment
+path, exact amount, destination, separate status lookup and settlement evidence.
+A direct manual payment alone does not validate an untested automatic adapter
+or authorize marking unrelated trade obligations paid. A validation payment is
+not prepayment for future royalties. If the validation settles an existing
+trade obligation, link the evidence to that obligation and do not pay it again.
+An uncertain result must be reconciled before any further attempt.
+
 If a technical fault prevents immediate payment, the obligation remains due.
 The Operator must notify Paul without undue delay at paulmeloux@proton.me,
 describe the fault, and resolve the payment within 72 hours of the trade's

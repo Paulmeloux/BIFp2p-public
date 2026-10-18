@@ -34,6 +34,33 @@ is fixed to 72 hours. Former destination/grace environment overrides are ignored
 Do not relabel an old test ledger for production. Start an independent deployment
 with a fresh database, or review any ledger transition explicitly.
 
+## Required real-payment validation
+
+Before accepting real user trades, contact Paul at **paulmeloux@proton.me**
+to test and evaluate a controlled real royalty payment together where he is
+available. Use operator-owned funds and the configured royalty payment path.
+
+**If Paul is unavailable, perform the validation independently:** pay
+**bitcoinisfreedombot@coinos.io**, verify the exact amount and beneficiary, and
+retain the wallet's outgoing record, payment hash and verified settlement
+evidence. Owner acknowledgement is not required where payment is independently
+verified. Do not send user information, wallet keys or private material.
+
+The test must exercise the configured adapter, separate lookup and durable
+recording. A manual transfer to the same address verifies that transfer, but
+does not establish that an untested automated adapter works. Resolve that
+before enabling user trades.
+
+A standalone validation payment is not credit for future trades. If validating
+payment of an already-created royalty obligation, reconcile it to that exact
+obligation so the worker does not pay it again. A missing owner response or a
+missing wallet record is not evidence of failure: reconcile any `UNKNOWN`
+outcome before trying again. Do not bypass the 72-hour gate.
+
+This is an obligation for independent operators before their own financial
+deployment. Adding this requirement does not authorize a live payment,
+production change or funded test by the original project's development agent.
+
 ## Operation and proof
 
 The worker runs every 30 seconds independently of trade recovery. For each

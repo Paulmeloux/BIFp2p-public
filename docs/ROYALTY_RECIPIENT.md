@@ -31,6 +31,18 @@ Do not impersonate the original project or claim endorsement.
 - Retain the supplied royalty functions or an equivalent working implementation.
   Do not change the beneficiary or bypass attribution/payment obligations.
 
+## Initial payment validation
+
+Before accepting real user trades, test the configured royalty payment flow
+with Paul where he is available. If he is unavailable, pay the same fixed
+beneficiary independently and verify and retain settlement evidence.
+Owner acknowledgement is not required for independently verified payment.
+Use operator-owned funds; the test must exercise the configured adapter and
+lookup. A manual payment alone does not validate an untested adapter.
+Do not count a standalone test payment as credit for future trades, or pay
+an existing obligation twice. Reconcile any uncertain payment before retrying.
+See [the validation procedure](ROYALTY_WALLET.md#required-real-payment-validation).
+
 ## Payment deadlines and incidents
 
 Pay immediately after each trade completes. If a technical fault prevents
