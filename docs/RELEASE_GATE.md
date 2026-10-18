@@ -2,8 +2,8 @@
 
 ## Scope and conclusion
 
-Preparation is complete for **public source review as a development preview**,
-subject to the owner's separate approval to merge and change repository visibility.
+The owner authorized publication on 2026-10-18. PR #1 was merged into `main`
+and the repository is now **public for source review as a development preview**.
 This is not certification of independent financial deployments.
 
 The original private BIFp2p repository, Telegram service, wallets and server have
@@ -75,10 +75,14 @@ is not claimed. No independent security audit or universal wallet compatibility
 is claimed. These are deployment limitations, not a requirement to restart source
 preparation or implement batching.
 
-## Publication boundary
+## Publication record and deployment boundary
 
-The development branch remains `dev/royalty-batching-reconciliation`; its name is
-historical. PR #1 remains a draft, `main` is unchanged, and the repository is private
-until the owner explicitly authorizes publication. Preparing this document does
-not itself authorize merging, changing visibility, deploying or transferring funds.
+On 2026-10-18, the owner expressly authorized publication. PR #1 was merged
+into `main` as `49f04090f4f1f3edc4dc40f413657b2f53ecb877`, including the approved
+README at `1537c42`. Repository visibility was changed to **public** and verified
+through the GitHub page and repository metadata.
 
+The historical development branch remains available; its name does not imply
+batching support. No production release tag, server deployment, live payment
+or change to the original private service was made. Independent operators must
+complete the documented validation before accepting users' funds.
