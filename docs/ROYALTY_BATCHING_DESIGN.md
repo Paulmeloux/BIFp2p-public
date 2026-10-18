@@ -13,6 +13,6 @@ This path is retained so older links clearly lead to the superseding decision.
 The former batch design is available in Git history; it must not be treated
 as a requirement to finish or activate batching.
 
-The experimental `royalty_batching.py`, associated tests and transport code
-remain unchanged by the documentation step. Their presence does not authorize
-batch payments. Code cleanup and per-trade integration require a separate change.
+The experimental batch module, provisional internal-transfer transport and
+associated tests have been removed. The active implementation uses the
+per-trade worker described in [ROYALTY_WALLET.md](ROYALTY_WALLET.md).

@@ -60,16 +60,20 @@ tokens, seeds and keys.
 An operator may use any suitable Lightning wallet; it need not be Coinos.
 Coinos escrow for trades is separate from the royalty-paying wallet.
 
-The current public branch calculates and records obligations. The per-trade
-wallet interface is a prototype, not an integrated payment worker.
-`ROYALTY_PAYMENT_TRANSPORT_ENABLED = False` and `PRODUCTION_ENFORCED`
-currently blocks new orders. The license's 72-hour rule and incident procedure
-are requirements to implement and verify, not completed runtime features.
+The public branch calculates obligations and runs a per-trade background worker.
+The built-in wallet adapter is LNbits, separate from Coinos trade escrow.
+Other trusted wallet adapters can implement the same interface. See
+[wallet configuration and reconciliation](ROYALTY_WALLET.md).
 
-The former batching experiment is superseded. Its remaining code and tests
-are not a supported payment path and must not be enabled or integrated.
-They will be addressed in the separate implementation step.
+Outbound payments are disabled by default. They require explicit configuration
+and transport enablement in production mode. Accounting-test obligations are
+never automatically converted into live payments. The worker implements the
+72-hour new-order gate and local incident notices; reporting faults to Paul
+remains the operator's responsibility, not an automatic email feature.
+
+Superseded batch code and tests have been removed. The implementation is
+verified offline only; it has not made a live royalty payment.
 
 The original private production service, its wallet, credentials and server
-are outside this distribution's change scope. This document does not
-authorize live transfers, deployment, merging or publication.
+remain outside this work. These instructions do not authorize live testing,
+deployment, merging or publication.

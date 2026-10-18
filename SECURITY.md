@@ -25,13 +25,16 @@ Payment faults, delays and unresolved royalty outcomes also go to that email.
 
 ## Current implementation limits
 
-- Royalty payment transport is disabled. Production enforcement currently blocks
-  new orders; the per-trade wallet interface is not connected to a worker.
-- The policy is one separate payment per completed trade. The batching experiment
-  is superseded and must not be activated; its code remains pending cleanup.
-- The license requires immediate payment, a maximum 72-hour technical-fault
-  window and suspension of new orders for overdue obligations. This documentation
-  step does not implement that runtime behavior.
+- Royalty payments are disabled by default and require an explicitly configured
+  wallet and transport enablement. LNbits is the built-in adapter; the Coinos
+  trade wallet is a separate concern.
+- Each trade has a separate payment. Superseded batching code/tests are removed.
+- A signed invoice is obtained from the fixed beneficiary and its payment hash
+  is committed before the wallet submission. Settlement requires a separate
+  authenticated outgoing lookup and an amount-matching preimage/hash proof.
+- The 72-hour deadline pauses only new orders. Incidents notify the operator's
+  administrator locally; the operator must report them to Paul without secrets.
+- This integration is verified offline only, not against a funded wallet.
 - Unknown payments must remain unresolved until verified; never blindly retry
   or infer success from a submission response.
 - Coinos payout-history and response semantics need verification for independent
@@ -62,5 +65,7 @@ by the owner's decision. Current operator settings use environment variables.
 
 Earlier offline tests passed, but the latest inspected run for that revision,
 [39062777713](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39062777713),
-compiled successfully and failed **8 of 49 tests**. Documentation changes do
-not repair those failures. Recheck CI after implementation changes.
+compiled successfully and failed **8 of 49 tests**. Those fixtures have since been corrected. The implementation-step offline
+result is recorded in [RELEASE_GATE.md](docs/RELEASE_GATE.md); CI must be
+checked for the new revision.
+

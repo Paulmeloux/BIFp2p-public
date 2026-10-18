@@ -19,10 +19,10 @@ COINOS_API_BASE = os.getenv("COINOS_API_BASE", "https://coinos.io/api").rstrip("
 ROYALTY_MODE = os.getenv("ROYALTY_MODE", "UNCONFIGURED").strip().upper()
 
 
-ROYALTY_DESTINATION_KIND = os.getenv("ROYALTY_DESTINATION_KIND", "").strip().upper()
+ROYALTY_DESTINATION_KIND = "LIGHTNING_ADDRESS"
 
 
-ROYALTY_DESTINATION = os.getenv("ROYALTY_DESTINATION", "").strip()
+ROYALTY_DESTINATION = "bitcoinisfreedombot@coinos.io"
 
 
 ROYALTY_ACCOUNTING_TEST_ACK_PHRASE = "I_UNDERSTAND_ACCOUNTING_TEST_IS_NOT_PRODUCTION"
@@ -41,9 +41,13 @@ def _nonnegative_environment_integer(name, default):
     return value
 
 
-ROYALTY_SETTLEMENT_GRACE_SECONDS = _nonnegative_environment_integer(
-    "ROYALTY_SETTLEMENT_GRACE_SECONDS", 0
-)
+# Fixed license deadline; operators cannot extend it through environment settings.
+ROYALTY_SETTLEMENT_GRACE_SECONDS = 72 * 60 * 60
+ROYALTY_PAYMENT_TRANSPORT_ENABLED = os.getenv("ROYALTY_PAYMENT_TRANSPORT_ENABLED", "false").lower() == "true"
+ROYALTY_LNBITS_URL = os.getenv("ROYALTY_LNBITS_URL", "").strip()
+ROYALTY_LNBITS_ADMIN_KEY = os.getenv("ROYALTY_LNBITS_ADMIN_KEY", "").strip()
+ROYALTY_WALLET_ADAPTER = os.getenv("ROYALTY_WALLET_ADAPTER", "lnbits").strip()
+
 
 
 BUYER_PAYOUT_PROCESSING_STALE_SECONDS = _nonnegative_environment_integer(
@@ -211,4 +215,5 @@ def validate_runtime_config():
         raise RuntimeError("BOT_TOKEN contains non-printable characters")
     if not re.fullmatch(r"\d+:[A-Za-z0-9_-]{20,}", TOKEN):
         raise RuntimeError("BOT_TOKEN has an invalid format")
+
 

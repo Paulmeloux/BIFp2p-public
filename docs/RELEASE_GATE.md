@@ -13,8 +13,7 @@
 - Immediate payment; technical faults must be reported and resolved within
   72 hours of trade completion. No email per successful payment.
 - Overdue unresolved obligations stop new orders, never safe settlement or
-  refunds for existing users. This is the required behavior, not yet an
-  implemented 72-hour runtime feature.
+  refunds for existing users. This behavior is now implemented in the per-trade worker and new-order gate.
 - No selected governing country or exclusive court. Ethical commitment does
   not make license conditions optional.
 - Historical non-secret administrator/price-endpoint references are retained
@@ -37,18 +36,34 @@ have been repaired or independently explained.
 Paul reports successful operation of the original Telegram service. That
 separate deployment is outside this work and does not certify this branch.
 
+## Implementation step completed
+
+- Integrated a per-trade worker and built-in LNbits wallet adapter, with a
+  trusted local adapter interface for other wallets. Coinos trade escrow is
+  unchanged. Outbound royalty payments remain disabled by default.
+- Verified signed, exact-amount invoices from the fixed Lightning Address;
+  persisted the invoice payment hash and wallet identity before submission.
+- Added independent lookup and cryptographic preimage verification; timeout,
+  crash and ambiguous responses never automatically resend a submitted payment.
+- Implemented the 72-hour new-order gate and local admin incident notices.
+  Successful payments do not notify Paul; incidents require operator reporting.
+- Removed superseded batch/internal-transfer experiments and tests.
+- Corrected old destination fixtures and updated dependency compatibility.
+- Offline verification: 56 tests passed, including 21 new payment lifecycle,
+  wallet-boundary and signed-invoice checks; compilation and static exclusion
+  checks passed. No live wallet or transfer was used. Check GitHub CI separately
+  for the resulting commit.
+
 ## Remaining source preparation
 
-1. Complete per-trade royalty payment integration and remove superseded
-   batch code/tests in a separately authorized implementation change.
-2. Resolve current test failures and verify the resulting revision.
-3. Finish the operator setup guide for credentials, wallet/payment adapter,
-   configuration and payment-incident handling.
-4. Review the final files and privacy findings, then obtain the owner's
-   express approval before merging or changing repository visibility.
+1. Finish the full operator setup and recovery guide (a royalty wallet guide
+   now documents the new interface and configuration).
+2. Verify CI on the resulting revision and review final source/privacy findings.
+3. Obtain the owner's express approval before merging or changing visibility.
 
-This documentation step does not change executable code, runtime settings,
-payment activation, branch protection, repository visibility or deployment.
+This step changes development code only. It does not activate the configured
+production service, enable payments in an existing environment, or change
+repository visibility.
 
 ## Before independent operation with real funds
 
@@ -70,3 +85,4 @@ Work remains on `dev/royalty-batching-reconciliation`; the historical branch
 name is not the payment policy. PR #1 remains a draft. No merge, publication,
 private-repository access, live payment or production-server change is authorized
 by completing this document.
+

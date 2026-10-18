@@ -254,6 +254,25 @@ def init_database():
             "ALTER TABLE order_attempt_timeouts ADD COLUMN reposted_at_unix INTEGER"
         )
 
+    # Per-trade payment identity survives timeout/restart without storing invoices.
+    attempt_columns = {row[1] for row in cursor.execute("PRAGMA table_info(royalty_payment_attempts)")}
+    for name, declaration in {
+        "invoice_payment_hash": "TEXT",
+        "wallet_identity": "TEXT",
+        "amount_sats": "INTEGER",
+        "beneficiary": "TEXT",
+        "last_checked_at_unix": "INTEGER",
+    }.items():
+        if name not in attempt_columns:
+            cursor.execute(f"ALTER TABLE royalty_payment_attempts ADD COLUMN {name} {declaration}")
+    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_royalty_invoice_hash "
+                   "ON royalty_payment_attempts(invoice_payment_hash) "
+                   "WHERE invoice_payment_hash IS NOT NULL")
+    cursor.execute("CREATE TABLE IF NOT EXISTS royalty_incident_notices ("
+                   "order_id INTEGER NOT NULL REFERENCES royalty_obligations(order_id), "
+                   "incident_key TEXT NOT NULL, sent_at_unix INTEGER NOT NULL, "
+                   "PRIMARY KEY(order_id, incident_key))")
+
     now_unix = int(time.time())
     cursor.execute(
         """
@@ -373,4 +392,5 @@ def init_database():
 
     conn.commit()
     conn.close()
+
 

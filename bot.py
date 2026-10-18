@@ -195,6 +195,7 @@ from database import (
     verify_database_integrity,
 )
 from royalty import recover_royalty_state_on_startup, royalty_status_snapshot
+from royalty_worker import royalty_worker, stop_royalty_worker
 from messaging import help_guide, publish_periodic_market_price, market_price_worker, stop_market_price_worker
 from support import (
     SupportNotificationReplyFilter,
@@ -263,6 +264,7 @@ async def set_bot_commands(app: Application) -> None:
         BotCommand("support", "پشتیبانی"),
         BotCommand("about", "About BIFp2p and original project")
     ], scope=BotCommandScopeAllPrivateChats())
+    app.bot_data["royalty_worker"] = asyncio.create_task(royalty_worker(app))
     await run_order_timeout_recovery_once(app)
     app.bot_data["order_timeout_worker"] = asyncio.create_task(
         order_timeout_worker(app)
@@ -281,6 +283,12 @@ async def stop_order_timeout_worker(app: Application) -> None:
         await worker
     except asyncio.CancelledError:
         pass
+
+
+async def stop_background_workers(app):
+    await stop_royalty_worker(app)
+    await stop_order_timeout_worker(app)
+    await stop_market_price_worker(app)
 
 
 async def global_error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -326,8 +334,7 @@ def main():
         Application.builder()
         .token(TOKEN)
         .post_init(set_bot_commands)
-        .post_shutdown(stop_order_timeout_worker)
-        .post_shutdown(stop_market_price_worker)
+        .post_shutdown(stop_background_workers)
         .build()
     )
 
@@ -768,3 +775,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

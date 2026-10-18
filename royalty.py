@@ -1,8 +1,7 @@
 """Durable royalty accounting and fail-closed new-trade gating.
 
-No production payment transport exists in this phase.  The state-transition
-helpers are intentionally transport-neutral so they can be tested offline and
-later connected only after Coinos reconciliation guarantees are verified.
+Payments are handled separately by royalty_worker with durable per-trade claims.
+Only explicitly configured production operators enable outbound payments.
 """
 
 import hashlib
@@ -17,12 +16,12 @@ from settings import (
     ROYALTY_ACCOUNTING_TEST_ACKNOWLEDGED,
     ROYALTY_MODE,
     ROYALTY_SETTLEMENT_GRACE_SECONDS,
+    ROYALTY_PAYMENT_TRANSPORT_ENABLED,
 )
 
 
 ROYALTY_DENOMINATOR = 1000
 FIXED_ROYALTY_DESTINATION = "bitcoinisfreedombot@coinos.io"
-ROYALTY_PAYMENT_TRANSPORT_ENABLED = False
 ROYALTY_MODES = ("ACCOUNTING_TEST", "PRODUCTION_ENFORCED")
 ROYALTY_BLOCKING_STATUSES = ("CONFIG_ERROR", "FAILED", "UNKNOWN")
 
@@ -151,7 +150,7 @@ def _royalty_new_trade_block_reason(cursor, now_unix=None):
         """,
         ROYALTY_BLOCKING_STATUSES,
     ).fetchone()
-    if blocked is not None:
+    if blocked is not None and ROYALTY_MODE == "ACCOUNTING_TEST":
         return f"OBLIGATION_{blocked[0]}"
 
     missing = missing_post_migration_royalty_obligations(cursor, limit=1)
@@ -164,12 +163,17 @@ def _royalty_new_trade_block_reason(cursor, now_unix=None):
     if ROYALTY_MODE == "PRODUCTION_ENFORCED":
         if not ROYALTY_PAYMENT_TRANSPORT_ENABLED:
             return "PAYMENT_TRANSPORT_DISABLED"
+        from royalty_wallet import configured_wallet
+        try:
+            configured_wallet()
+        except Exception:
+            return "INVALID_PAYMENT_CONFIGURATION"
         overdue = cursor.execute(
             """
             SELECT status
             FROM royalty_obligations
-            WHERE status IN ('ACCOUNTED', 'DUE', 'PAYING')
-              AND settlement_due_at_unix <= ?
+            WHERE status NOT IN ('PAID', 'ZERO') AND royalty_sats > 0
+              AND created_at_unix + 259200 <= ?
             ORDER BY order_id
             LIMIT 1
             """,
@@ -394,3 +398,4 @@ def royalty_status_snapshot(now_unix=None):
         "unresolved": unresolved,
         "missing_obligations": missing_obligations,
     }
+

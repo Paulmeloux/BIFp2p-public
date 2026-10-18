@@ -135,7 +135,7 @@ an additional charge to the buyer or seller.
 
 Refunded, cancelled, and failed trades do not generate completed-trade
 royalties. The implementation maintains a local obligation ledger, but
-royalty payment transport is **not implemented or enabled**. Each trade's
+the integrated per-trade worker is **disabled by default**. Each trade's
 royalty is payable separately, without batching. Independent operators must
 configure a suitable Lightning wallet, compatible payment API, and payment
 verification mechanism to remit the fixed beneficiary. An accounting entry
@@ -148,9 +148,11 @@ obligation requires pausing new order creation and acceptance, while existing
 trades, refunds and recovery continue safely. Successful payments are recorded
 locally; **no email is required for each successful payment**.
 
-These are the approved license requirements, not a claim that the current
-code implements the 72-hour enforcement or incident reporting. See the
-[operator royalty requirements](docs/ROYALTY_RECIPIENT.md).
+The worker enforces the 72-hour new-order deadline and sends incident notices
+only to the independent operator's Telegram administrator. The operator must
+report faults to Paul; the bot does not send email. See the
+[operator royalty requirements](docs/ROYALTY_RECIPIENT.md) and
+[wallet adapter setup](docs/ROYALTY_WALLET.md).
 
 ## Technology and architecture
 
@@ -169,19 +171,24 @@ and is not automatically loaded.
 
 **This repository is a development preview. Do not deploy with real funds.**
 
-Earlier offline test runs passed. The latest inspected run for code at
-`805d2cc`, [39062777713](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39062777713),
-compiled successfully but had **8 failures in 49 tests**. Do not describe that
-revision as passing. Documentation-only changes do not fix those failures.
-Unit-test success is not a security audit or a guarantee of live behavior.
+The per-trade royalty worker is connected to bot startup and uses a separate
+background task, so royalty failures do not stop existing trade recovery.
+The built-in payment adapter supports **LNbits**; other trusted local wallet
+adapters may implement the same contract. Coinos remains the separate trade
+escrow provider. No batching payment path remains.
 
-The production royalty payment transport is disabled. Production enforcement
-intentionally blocks new orders. The previous batch royalty prototype is
-superseded and is not an operator payment option. Its code and tests remain
-pending a separate code change; they must not be integrated or enabled.
-Per-trade wallet-neutral payment remains an unconnected prototype. End-to-end verification of escrow, payouts, refunds,
-crash recovery, and ambiguous Coinos responses is required before a
-production release.
+The worker checks a signed, exact-amount mainnet invoice from the fixed
+beneficiary, durably records its payment hash before submission, and verifies
+payment through a separate wallet lookup and matching preimage. Unknown
+outcomes are reconciled without automatically resending the invoice.
+
+Outbound royalty payments require explicit environment configuration and are
+**disabled by default**. This change was tested offline with fake wallets;
+no live transfer or independent-operator deployment has been tested or
+approved. End-to-end escrow, payout, refund and recovery checks remain
+necessary before financial operation. Earlier CI at `805d2cc` failed 8 of
+49 tests; those fixtures have been updated, and the current result is recorded
+in [RELEASE_GATE.md](docs/RELEASE_GATE.md).
 
 See [SECURITY.md](SECURITY.md) and
 [docs/RELEASE_GATE.md](docs/RELEASE_GATE.md) for the current safety gate.
@@ -234,3 +241,4 @@ a time.
 [Community](https://t.me/BitcoinIsFreedom) ·
 [Original maintainer](https://github.com/Paulmeloux) ·
 [Canonical repository](https://github.com/Paulmeloux/BIFp2p-public)
+
