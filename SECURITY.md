@@ -57,15 +57,24 @@ See [RELEASE_GATE.md](docs/RELEASE_GATE.md).
 
 ## Review and automated checks
 
-The review of code at `805d2cc` inspected 44 current files and 67 ancestor
-commits (88 distinct file versions). No live token or private key was found
-in the checks performed; this is not a guarantee of absence or a financial
-security audit. Historical administrator and price-endpoint references remain
-by the owner's decision. Current operator settings use environment variables.
+The publication review at `90fd69f` inspected 44 current files and 70 ancestor
+commits (115 distinct file versions). No live token/private key or tracked user
+database, backup or private log was found in the checks performed. Authors use
+Paul aliases and the approved public contact email. Historical non-secret admin
+and price-endpoint references remain by the owner's decision. Current operator
+settings use environment variables; the beneficiary and deadline are fixed.
+This is a source/privacy review, not a guarantee of absence or a financial audit.
 
-Earlier offline tests passed, but the latest inspected run for that revision,
-[39062777713](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39062777713),
-compiled successfully and failed **8 of 49 tests**. Those fixtures have since been corrected. The implementation-step offline
-result is recorded in [RELEASE_GATE.md](docs/RELEASE_GATE.md); CI must be
-checked for the new revision.
+The payment implementation at `c799209` passed **56 offline tests** locally and
+in GitHub Actions on Python 3.11, including 21 new wallet/payment tests. Static
+checks also passed. The following documentation-only revision `90fd69f` passed
+CI as well: [offline tests](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39131921299)
+and [static checks](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39131917144).
+No live royalty transfer or independent deployment has been tested here.
 
+For deployment, follow [OPERATOR_GUIDE.md](docs/OPERATOR_GUIDE.md). Real-payment
+validation with Paul, or independent verified payment when he is unavailable,
+is an operator requirement. A payment with unknown outcome must not be repeated
+blindly. Database rollback/loss requires wallet-history reconciliation before
+resuming the worker; exactly-once behavior after lost database state is not
+claimed. See [RELEASE_GATE.md](docs/RELEASE_GATE.md) for the source-release boundary.

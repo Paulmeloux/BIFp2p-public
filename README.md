@@ -116,6 +116,18 @@ verified. The existing UI still contains Persian messages and some
 community-specific references. Those need to be localized and separated from
 operator identity before an English-only operator release.
 
+## Install and operate
+
+Follow the [operator setup and recovery guide](docs/OPERATOR_GUIDE.md) for
+requirements, installation, environment loading, price-service format, independent
+wallets, payment validation and recovery. Start with offline tests. The app does
+not load `.env` automatically. Developers and operators can contact
+[Paul](mailto:paulmeloux@proton.me) for coordination.
+
+Before accepting real user trades, validate the payment path with Paul where
+available. If he is unavailable, pay the fixed beneficiary independently and
+verify the result. See the [required payment validation](docs/ROYALTY_WALLET.md#required-real-payment-validation).
+
 ## Fees and project sustainability
 
 The current design charges a seller-side operator commission determined by
@@ -169,7 +181,7 @@ and is not automatically loaded.
 
 ## Current development status
 
-**This repository is a development preview. Do not deploy with real funds.**
+**Development preview. Complete operator validation before accepting real user funds.**
 
 The per-trade royalty worker is connected to bot startup and uses a separate
 background task, so royalty failures do not stop existing trade recovery.
@@ -186,9 +198,9 @@ Outbound royalty payments require explicit environment configuration and are
 **disabled by default**. This change was tested offline with fake wallets;
 no live transfer or independent-operator deployment has been tested or
 approved. End-to-end escrow, payout, refund and recovery checks remain
-necessary before financial operation. Earlier CI at `805d2cc` failed 8 of
-49 tests; those fixtures have been updated, and the current result is recorded
-in [RELEASE_GATE.md](docs/RELEASE_GATE.md).
+necessary before accepting other users' funds. The current code passed 56
+offline tests locally and in GitHub Actions on Python 3.11; see
+[release evidence and limits](docs/RELEASE_GATE.md).
 
 See [SECURITY.md](SECURITY.md) and
 [docs/RELEASE_GATE.md](docs/RELEASE_GATE.md) for the current safety gate.
@@ -241,4 +253,5 @@ a time.
 [Community](https://t.me/BitcoinIsFreedom) ·
 [Original maintainer](https://github.com/Paulmeloux) ·
 [Canonical repository](https://github.com/Paulmeloux/BIFp2p-public)
+
 

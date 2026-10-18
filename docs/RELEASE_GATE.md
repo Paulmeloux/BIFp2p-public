@@ -1,88 +1,84 @@
-# Publication and operator readiness — 2026-10-18
+# Source publication readiness — 2026-10-18
 
-## Confirmed decisions and completed documentation
+## Scope and conclusion
 
-- Copyright holder: **Paul**. Maintainer: https://github.com/Paulmeloux
-- Contact: **paulmeloux@proton.me**.
-- [LICENSE](../LICENSE) contains the approved source-available v1.0 terms;
-  licensing is no longer an unresolved draft.
-- Preserve original attribution and distinguish independent operators.
-- Royalty: `original_amount_sats // 1000` from the operator's commission,
-  payable separately per completed trade to **bitcoinisfreedombot@coinos.io**.
-- No batching. The previous batch design is superseded, not work to complete.
-- Immediate payment; technical faults must be reported and resolved within
-  72 hours of trade completion. No email per successful payment.
-- Overdue unresolved obligations stop new orders, never safe settlement or
-  refunds for existing users. This behavior is now implemented in the per-trade worker and new-order gate.
-- No selected governing country or exclusive court. Ethical commitment does
-  not make license conditions optional.
-- Historical non-secret administrator/price-endpoint references are retained
-  by the owner's decision; no history rewrite is planned for those references.
+Preparation is complete for **public source review as a development preview**,
+subject to the owner's separate approval to merge and change repository visibility.
+This is not certification of independent financial deployments.
 
-## Existing evidence
+The original private BIFp2p repository, Telegram service, wallets and server have
+not been accessed or changed. No real royalty payment was made during this work.
 
-At revision `805d2cc`, 44 current files and 67 ancestor commits (88 distinct
-file versions) were inspected. No live token or private key was found in
-the checks performed. No tracked user database, backup or private log was found.
-The current code has no books or BIFWallet integration. This is not a guarantee
-that all possible sensitive data or financial defects have been excluded.
+## Completed preparation
 
-Earlier Windows and CI runs passed. The latest inspected run for `805d2cc`,
-[39062777713](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39062777713),
-compiled successfully but failed **8 of 49 tests**. Old test fixtures still
-use a destination rejected by the fixed-recipient check; not all failures
-have been repaired or independently explained.
+- [LICENSE](../LICENSE): final source-available v1.0 terms, copyright Paul,
+  attribution, redistribution/modification conditions and fixed per-trade royalty.
+- Public contact: **paulmeloux@proton.me**; maintainer https://github.com/Paulmeloux.
+- Current code excludes books and BIFWallet modules and their runtime imports.
+- Tokens, operator identity, channel, database and price endpoint are configured
+  by the independent operator. No real credentials are supplied in the template.
+- Royalty: `original_amount_sats // 1000`, payable separately per completed trade
+  to **bitcoinisfreedombot@coinos.io**, from the operator's commission.
+- Integrated LNbits wallet adapter and per-trade worker; no batching path remains.
+  Other trusted local wallet modules may implement the documented interface.
+- Signed invoice verification, exact amount/metadata/expiry checks, durable hash
+  and wallet identity before submission, independent lookup and preimage proof.
+- Unknown submissions are reconciliation-only. A 72-hour unresolved debt pauses
+  new order creation/acceptance while existing settlement/refund/recovery remains
+  available. Payment defaults are disabled; no existing environment was activated.
+- Successful payments require local records, not emails. Incidents notify the
+  operator's admin; reporting to Paul is the operator's responsibility.
+- [OPERATOR_GUIDE.md](OPERATOR_GUIDE.md): installation, credentials, runtime modes,
+  price-service contract, startup, validation, incidents, backups and recovery.
+- Operators must test actual payment with Paul where available, or pay the fixed
+  beneficiary independently and verify settlement if he is unavailable. Owner
+  acknowledgement is not required for independently verified payment.
 
-Paul reports successful operation of the original Telegram service. That
-separate deployment is outside this work and does not certify this branch.
+## Evidence
 
-## Implementation step completed
+| Check | Result |
+| --- | --- |
+| Code reference | `c799209`; later `90fd69f` changes license/docs only. |
+| Offline suite | 56 passing tests, including 21 new wallet/payment tests. |
+| Compilation | Passed locally and in GitHub Actions on Python 3.11. |
+| Static exclusions | Passed; prohibited modules/imports absent. |
+| Implementation CI | [39131208052](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39131208052), success. |
+| Subsequent CI | [39131921299](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39131921299), success. |
+| Subsequent static CI | [39131917144](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39131917144), success. |
+| Source/history privacy review | At `90fd69f`: 44 current files, 70 ancestor commits, 115 distinct file versions. |
+| Credentials/private data findings | No live token/private key, tracked user database, backup or private log found in the checks performed. |
+| Author metadata | Paul aliases and the approved public contact email. |
+| Historical references | Non-secret administrator ID and old price endpoint remain by the owner's decision. |
 
-- Integrated a per-trade worker and built-in LNbits wallet adapter, with a
-  trusted local adapter interface for other wallets. Coinos trade escrow is
-  unchanged. Outbound royalty payments remain disabled by default.
-- Verified signed, exact-amount invoices from the fixed Lightning Address;
-  persisted the invoice payment hash and wallet identity before submission.
-- Added independent lookup and cryptographic preimage verification; timeout,
-  crash and ambiguous responses never automatically resend a submitted payment.
-- Implemented the 72-hour new-order gate and local admin incident notices.
-  Successful payments do not notify Paul; incidents require operator reporting.
-- Removed superseded batch/internal-transfer experiments and tests.
-- Corrected old destination fixtures and updated dependency compatibility.
-- Offline verification: 56 tests passed, including 21 new payment lifecycle,
-  wallet-boundary and signed-invoice checks; compilation and static exclusion
-  checks passed. No live wallet or transfer was used. Check GitHub CI separately
-  for the resulting commit.
+Earlier failures at `805d2cc` were resolved by aligning destination fixtures with
+the fixed beneficiary and updating the deadline test. Superseded experimental
+tests were removed, and 21 new tests cover the integrated payment path.
 
-## Remaining source preparation
+The tests exercise separate payments, concurrency, timeout/restart, preparation
+failure retry, duplicate invoice rejection, proof/amount mismatch, wallet changes,
+accounting-test exclusion, refund exclusion, deadline boundaries and existing
+settlement while the new-order gate is closed. No funded service was contacted.
 
-1. Finish the full operator setup and recovery guide (a royalty wallet guide
-   now documents the new interface and configuration).
-2. Verify CI on the resulting revision and review final source/privacy findings.
-3. Obtain the owner's express approval before merging or changing visibility.
+## Independent operator requirements
 
-This step changes development code only. It does not activate the configured
-production service, enable payments in an existing environment, or change
-repository visibility.
+The original service's successful operation is reported by Paul; it does not
+certify another operator's infrastructure or the new royalty wallet integration.
+Before accepting third-party funds, the operator must verify their actual Coinos
+escrow/payout/refund/recovery and royalty wallet behavior using controlled funds.
+Follow [ROYALTY_WALLET.md](ROYALTY_WALLET.md), including independent validation
+when Paul is unavailable. A standalone manual transfer does not validate an
+untested automatic adapter or prepay future royalties.
 
-## Before independent operation with real funds
+Database rollback or loss can remove evidence of a real payment. Reconcile wallet
+history before resuming submissions. Exactly-once operation after database loss
+is not claimed. No independent security audit or universal wallet compatibility
+is claimed. These are deployment limitations, not a requirement to restart source
+preparation or implement batching.
 
-- Verify the actual wallet's invoice resolution, payment API, fee behavior,
-  independent payment lookup and reliable proof of settlement.
-- Test one obligation/payment per trade, concurrency, crashes, restart,
-  unknown outcomes, refund handling and backup restoration without duplicate
-  transfers. Do not demand or implement a batch lifecycle.
-- Verify immediate payment, the 72-hour rule and operator incident reporting;
-  keep existing-trade safety paths available while new orders are paused.
-- Verify Coinos escrow/payout/refund/recovery behavior and operator configuration.
+## Publication boundary
 
-Do not enable payment transport merely to clear a gate.
-Financial activation or live testing requires separate express authorization.
-
-## Work boundary
-
-Work remains on `dev/royalty-batching-reconciliation`; the historical branch
-name is not the payment policy. PR #1 remains a draft. No merge, publication,
-private-repository access, live payment or production-server change is authorized
-by completing this document.
+The development branch remains `dev/royalty-batching-reconciliation`; its name is
+historical. PR #1 remains a draft, `main` is unchanged, and the repository is private
+until the owner explicitly authorizes publication. Preparing this document does
+not itself authorize merging, changing visibility, deploying or transferring funds.
 
