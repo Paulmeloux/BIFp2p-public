@@ -1,1 +1,4 @@
 python-telegram-bot>=21,<23
+bolt11==2.2.0
+# bolt11 2.2.0 uses ConstBitStream, removed by bitstring 5.
+bitstring>=4,<5

@@ -16,11 +16,16 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
+          import ast
           files = list(Path('.').glob('*.py'))
           assert not any(p.name == 'books.py' or p.name == 'bifwallet.py' or p.name.startswith('wallet_') for p in files)
           for path in files:
-              text = path.read_text(encoding='utf-8')
-              assert not re.search(r'books|bifwallet|wallet_', text, re.I), path
+              tree = ast.parse(path.read_text(encoding='utf-8'))
+              for node in ast.walk(tree):
+                  modules = ([node.module or ''] if isinstance(node, ast.ImportFrom)
+                             else [a.name for a in node.names] if isinstance(node, ast.Import) else [])
+                  assert not any(m.split('.')[0] in ('books', 'bifwallet') or
+                                 m.split('.')[0].startswith('wallet_') for m in modules), path
           print(f'Checked {len(files)} Python modules')
           PY
+

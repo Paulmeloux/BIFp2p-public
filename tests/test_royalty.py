@@ -27,7 +27,7 @@ class RoyaltyAccountingTests(unittest.IsolatedAsyncioTestCase):
             royalty, "ROYALTY_DESTINATION_KIND", "LIGHTNING_ADDRESS"
         )
         self.destination_patch = patch.object(
-            royalty, "ROYALTY_DESTINATION", "royalty@example.test"
+            royalty, "ROYALTY_DESTINATION", royalty.FIXED_ROYALTY_DESTINATION
         )
         self.grace_patch = patch.object(
             royalty, "ROYALTY_SETTLEMENT_GRACE_SECONDS", 60
@@ -599,7 +599,8 @@ asyncio.run(settlement.auto_pay_buyer_invoice(
                 royalty.royalty_new_trade_block_reason(),
                 "PAYMENT_TRANSPORT_DISABLED",
             )
-            with patch.object(royalty, "ROYALTY_PAYMENT_TRANSPORT_ENABLED", True):
+            with patch.object(royalty, "ROYALTY_PAYMENT_TRANSPORT_ENABLED", True), patch("royalty_wallet.configured_wallet"):
+
                 with patch.object(royalty, "ROYALTY_DESTINATION", ""):
                     self.assertEqual(
                         royalty.royalty_new_trade_block_reason(),
@@ -608,7 +609,7 @@ asyncio.run(settlement.auto_pay_buyer_invoice(
                 order_id = self.insert_order()
                 self.complete_directly(order_id, completed_at=100)
                 self.assertEqual(
-                    royalty.royalty_new_trade_block_reason(now_unix=1000),
+                    royalty.royalty_new_trade_block_reason(now_unix=100 + 72 * 3600),
                     "OVERDUE_DUE",
                 )
 
@@ -736,3 +737,4 @@ asyncio.run(settlement.auto_pay_buyer_invoice(
 
 if __name__ == "__main__":
     unittest.main()
+

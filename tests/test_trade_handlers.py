@@ -51,7 +51,7 @@ class TradeHandlerIntegrationTests(unittest.IsolatedAsyncioTestCase):
             patch.object(database, "DB_PATH", self.database_path),
             patch.object(royalty, "ROYALTY_MODE", "ACCOUNTING_TEST"),
             patch.object(royalty, "ROYALTY_DESTINATION_KIND", "LIGHTNING_ADDRESS"),
-            patch.object(royalty, "ROYALTY_DESTINATION", "royalty@example.test"),
+            patch.object(royalty, "ROYALTY_DESTINATION", royalty.FIXED_ROYALTY_DESTINATION),
             patch.object(royalty, "ROYALTY_ACCOUNTING_TEST_ACKNOWLEDGED", True),
         )
         for active_patch in patches:
@@ -322,3 +322,4 @@ class TradeHandlerIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
