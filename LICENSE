@@ -1,0 +1,222 @@
+# BIFp2p Source-Available License v1.0
+
+Copyright (c) 2026 Paul. All rights reserved except as granted below.
+
+Original project: BIFp2p | Bitcoin Is Freedom | Created by Paul  
+Copyright holder and original maintainer: Paul  
+Maintainer: https://github.com/Paulmeloux  
+Canonical repository: https://github.com/Paulmeloux/BIFp2p-public  
+Community: https://t.me/BitcoinIsFreedom  
+Developer, operator, payment-incident and security contact: paulmeloux@proton.me
+
+## 1. Purpose and scope
+
+BIFp2p supports direct Bitcoin exchange, financial freedom, and responsible
+cooperation within the Bitcoin community. Source access is offered to help
+others inspect, improve, translate and independently operate the software,
+subject to the conditions below.
+
+In the spirit of humility and service associated with Satoshi Nakamoto's
+contribution to Bitcoin, we do not consider ourselves greater or more
+important than Bitcoin's creator. We ask operators to honour the work of
+others and help sustain tools that benefit the community. This is the
+project's ethical position, not a quotation from Satoshi, a claim about
+Satoshi's personal obligations, or an endorsement by Satoshi.
+
+These terms are license conditions, not merely an optional donation request.
+Their ethical purpose does not make attribution or royalty payment optional.
+No guarantee of legal enforceability or successful collection is made.
+
+"Software" means the original BIFp2p code and accompanying material supplied
+under this license, including covered portions in modified or renamed versions.
+Third-party dependencies remain under their own licenses.
+
+"Operator" means a person or entity operating the Software to facilitate
+actual Bitcoin trades, whether or not the deployment is described as
+commercial, nonprofit, free, private or community-run.
+
+## 2. Permission
+
+Subject to compliance with this license, you may inspect, use, copy, modify,
+translate and redistribute the Software, and operate an independent deployment.
+
+Retain this license, existing copyright notices and the original attribution.
+Distributed modified versions must identify material changes, distinguish their
+maintainer from Paul, and preserve these terms for the covered Software.
+You may license your independently authored additions separately only where
+doing so does not remove these conditions from the covered Software.
+
+Offline development, review and simulated tests without actual trades do not
+generate trade royalties. Live trades are not exempt merely because a
+deployment is labelled a test.
+
+This is a custom source-available license, not an OSI-approved open-source license.
+
+## 3. Attribution and independent identity
+
+Preserve the following attribution in the README, license and source notices,
+and in an accessible /about command or equivalent user-facing view:
+
+BIFp2p | Bitcoin Is Freedom | Created by Paul  
+https://github.com/Paulmeloux/BIFp2p-public  
+https://t.me/BitcoinIsFreedom
+
+Preserve the maintainer contact, paulmeloux@proton.me, in the license and
+project documentation.
+
+Operators must clearly identify their own service, administrator and support
+contact. They must not claim to be the original creator, the official project,
+or an endorsed representative without Paul's express permission.
+Project attribution does not require using the original operator's bot,
+credentials, support service, channel or infrastructure.
+
+No trademark ownership or right to impersonate the original project is granted.
+
+## 4. Royalty for each completed trade
+
+For each successfully completed trade facilitated by an independent Operator,
+the Operator owes the original project:
+
+royalty_sats = original_amount_sats // 1000
+
+This is 0.1% of the original Bitcoin trade amount, rounded down to whole
+satoshis. The original amount is the agreed trade principal before operator
+fees, not the escrow total including fees or the fiat amount.
+
+The fixed beneficiary is:
+
+bitcoinisfreedombot@coinos.io
+
+Each completed trade creates its own obligation and must have its own
+separate payment. Do not batch or aggregate payments for multiple trades.
+An obligation that rounds to zero requires no payment.
+
+The royalty is paid from the Operator's commission. It must not be added
+as a separate charge to the buyer or seller. Waiving or reducing the
+Operator's commission does not waive the royalty; the Operator must fund
+any shortfall. Network or wallet payment costs are borne by the Operator
+and do not reduce the royalty amount.
+
+Cancelled, failed and refunded trades do not generate completed-trade
+royalties. A trade must not be relabelled or its original amount manipulated
+to conceal successful completion. Do not charge the same trade twice.
+If a previously completed trade is later fully refunded, cancel its unpaid
+royalty obligation. If its royalty was already paid, contact Paul to resolve
+that specific payment; do not silently offset unrelated trades.
+
+The original project's own deployment is not an independent Operator for
+the purpose of remitting a royalty to itself.
+
+## 5. Payment, failures and evidence
+
+Successful payments are recorded locally. No email or notification to Paul is
+required for each successful payment. Contact is required for payment faults,
+delays or unresolved outcomes as described below; this license does not require
+automatic email transmission or collection of user data.
+
+Payment is due immediately after successful completion of each trade.
+Operators must configure and maintain a suitable Lightning wallet and a
+working payment and verification method. The wallet need not be Coinos.
+
+Operators must retain the supplied royalty accounting, payment and verification
+functions, or replace them with an equivalent functioning implementation that
+preserves these conditions. Disabling collection, changing the beneficiary,
+falsifying settlement or bypassing enforcement to evade payment is prohibited.
+This clause does not represent a claim that the current development code
+already supplies a complete functioning payment integration.
+
+If a technical fault prevents immediate payment, the obligation remains due.
+The Operator must notify Paul without undue delay at paulmeloux@proton.me,
+describe the fault, and resolve the payment within 72 hours of the trade's
+completion. Notification does not extend the deadline or erase the debt.
+
+If any positive royalty obligation remains unpaid or unresolved after that
+deadline, the Operator must stop creating and accepting new trades until
+the overdue obligations are resolved. Existing trades, refunds, disputes,
+recovery and withdrawals necessary to protect users must continue safely.
+Do not hold user funds hostage to royalty enforcement.
+
+An accounting entry, request submission or wallet timeout is not proof of
+payment. Treat an uncertain payment as potentially successful, reconcile
+it before any retry, and never blindly send it again. The deadline does
+not justify duplicate payment or a false PAID status. Where reliable
+verification is unavailable, keep the payment unresolved and pause new
+trades when required.
+
+Retain a minimal trade-to-payment record showing the original amount, royalty,
+timestamps, beneficiary, status and verifiable payment reference where available.
+Provide relevant redacted evidence to Paul on reasonable request.
+Do not send user identities, banking details, credentials, seeds or private keys.
+Incident notices must also exclude sensitive user data.
+
+## 6. Breach and termination
+
+Intentional removal of attribution, impersonation, deliberate nonpayment,
+beneficiary substitution, payment-record falsification or deliberate
+circumvention terminates the violator's permissions under this license
+immediately, without notice or a cure period.
+
+For an unintentional material breach not governed by the payment deadline
+above, Paul may give written notice requiring correction within 30 days.
+Failure to correct it within that period terminates the violator's permissions.
+
+Termination does not erase accrued obligations. It does not terminate the
+permissions of other recipients who remain compliant. After termination,
+no new trades or redistribution are permitted by the violator. Only the
+minimum continued operation necessary to safely settle or refund existing
+user obligations is permitted; it is not reinstatement.
+Reinstatement after termination requires Paul's written agreement.
+
+## 7. Contributions
+
+Unless separately agreed in writing, intentionally submitted contributions
+are offered under this same license. Contributors retain ownership of their
+own original contributions and must have authority to submit them.
+A contribution does not transfer ownership of the original project or
+authorize removal of its attribution or royalty conditions.
+
+## 8. Operating status and responsibility
+
+Paul reports that the original BIFp2p Telegram service is operating successfully
+and that issues identified in that deployment have been addressed.
+This is a maintainer statement about that deployment, not a claim that every
+possible defect has been eliminated or that every public branch, modification
+or independent deployment has passed the same checks.
+
+Every independent Operator is responsible for its configuration, credentials,
+wallets, infrastructure, user funds, security, backups, support, disputes
+and compliance with applicable requirements. The original project's operation
+does not constitute approval of an independent deployment.
+
+## 9. No warranty and limitation of liability
+
+To the maximum extent permitted by applicable law, the Software is provided
+AS IS, without warranties, including merchantability, fitness for a particular
+purpose, noninfringement, uninterrupted operation or security.
+
+To the maximum extent permitted by applicable law, Paul and other contributors
+are not liable for claims, damages or losses arising from use or inability
+to use the Software, including loss of funds, data or profits.
+Nothing excludes liability that cannot lawfully be excluded.
+
+## 10. Good-faith resolution and applicable law
+
+The project prioritizes ethical commitment, honest attribution and support
+for the Bitcoin community. Parties should first seek good-faith resolution
+through paulmeloux@proton.me.
+
+This license selects no particular country's governing law, exclusive court
+or arbitration forum. Applicable mandatory law continues to apply.
+The absence of a selected forum does not make compliance optional.
+If a provision is unenforceable, the remaining provisions continue to the
+extent permitted by applicable law.
+
+## 11. Version and publication
+
+These terms apply to copies expressly distributed under this version.
+Later license changes do not retroactively change this version for copies
+already received. Exceptions require Paul's express written permission.
+
+Preparing or approving this text does not itself change GitHub visibility,
+merge branches, deploy software, enable payments or certify financial safety.
+

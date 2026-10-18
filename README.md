@@ -15,6 +15,7 @@ communities.
 
 **Original project:** [Bitcoin Is Freedom](https://t.me/BitcoinIsFreedom)  
 **Original author and maintainer:** [Paul](https://github.com/Paulmeloux)  
+**Developer and operator contact:** [paulmeloux@proton.me](mailto:paulmeloux@proton.me)  
 **Canonical source:** [github.com/Paulmeloux/BIFp2p-public](https://github.com/Paulmeloux/BIFp2p-public)
 
 > Software should make financial choice possible, not demand permission to
@@ -65,6 +66,13 @@ availability limitations.
 
 This is a description of the intended workflow, not a claim that every
 failure scenario has been proven safe.
+
+## Original service and this distribution
+
+Paul reports that the original BIFp2p Telegram service is operating successfully
+and that identified issues in that deployment have been addressed. This
+independent source distribution is being prepared for other operators; that
+report does not certify every public branch or independent deployment.
 
 ## One project, one shared codebase
 
@@ -131,7 +139,18 @@ royalty payment transport is **not implemented or enabled**. Each trade's
 royalty is payable separately, without batching. Independent operators must
 configure a suitable Lightning wallet, compatible payment API, and payment
 verification mechanism to remit the fixed beneficiary. An accounting entry
-is not proof of payment. See [operator royalty requirements](docs/ROYALTY_RECIPIENT.md).
+is not proof of payment.
+
+Payment is due immediately. Technical payment faults, delays or unresolved
+outcomes must be reported to [Paul](mailto:paulmeloux@proton.me) without undue
+delay and resolved within 72 hours of trade completion. Any overdue unresolved
+obligation requires pausing new order creation and acceptance, while existing
+trades, refunds and recovery continue safely. Successful payments are recorded
+locally; **no email is required for each successful payment**.
+
+These are the approved license requirements, not a claim that the current
+code implements the 72-hour enforcement or incident reporting. See the
+[operator royalty requirements](docs/ROYALTY_RECIPIENT.md).
 
 ## Technology and architecture
 
@@ -150,12 +169,17 @@ and is not automatically loaded.
 
 **This repository is a development preview. Do not deploy with real funds.**
 
-The offline test suite has passed on the development branch. This is not a
-security audit or a guarantee of correct behavior with live Coinos services.
+Earlier offline test runs passed. The latest inspected run for code at
+`805d2cc`, [39062777713](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39062777713),
+compiled successfully but had **8 failures in 49 tests**. Do not describe that
+revision as passing. Documentation-only changes do not fix those failures.
+Unit-test success is not a security audit or a guarantee of live behavior.
 
 The production royalty payment transport is disabled. Production enforcement
-intentionally blocks new orders. The previous batch royalty prototype is not part of the intended payment
-policy. Per-trade wallet-neutral payment remains an unconnected prototype. End-to-end verification of escrow, payouts, refunds,
+intentionally blocks new orders. The previous batch royalty prototype is
+superseded and is not an operator payment option. Its code and tests remain
+pending a separate code change; they must not be integrated or enabled.
+Per-trade wallet-neutral payment remains an unconnected prototype. End-to-end verification of escrow, payouts, refunds,
 crash recovery, and ambiguous Coinos responses is required before a
 production release.
 
@@ -181,14 +205,21 @@ authorization.
 
 ## Licensing
 
-BIFp2p is intended to be **source-available**, not OSI-approved open source.
-The proposed terms permit source review, modifications and independent
-operation subject to attribution and an operator royalty.
+BIFp2p is distributed under the [BIFp2p Source-Available License v1.0](LICENSE),
+copyright (c) 2026 **Paul**. The license permits inspection, modification,
+translation, redistribution and independent operation subject to retained
+attribution and a separate 0.1% royalty for each completed trade.
+It is a custom source-available license, not OSI-approved open source.
 
-The proposed terms are currently in
-[LICENSE-DRAFT](LICENSE-DRAFT), **not a finalized license**. Until a final
-license is approved and published, GitHub access alone does not grant a
-general right to redistribute or commercially operate the software.
+The license expresses an ethical commitment to honest attribution and support
+for the Bitcoin community, inspired by humility toward Satoshi Nakamoto's
+contribution. Its payment and attribution conditions remain mandatory.
+Intentional evasion or impersonation terminates permission immediately.
+
+Contributions are submitted under the same license unless agreed otherwise;
+contributors retain ownership of their own original work. Questions and
+payment incidents: [paulmeloux@proton.me](mailto:paulmeloux@proton.me).
+Finalizing the license does not enable payments or authorize deployment.
 
 ## A note on independence
 

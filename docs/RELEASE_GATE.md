@@ -1,20 +1,72 @@
-# Release gate — 2026-10-16
+# Publication and operator readiness — 2026-10-18
 
-## Verified
+## Confirmed decisions and completed documentation
 
-- Windows: 35/35 offline unit tests passed, including 4 batching tests; Python compilation succeeded; clean git working tree (user-provided test output).
-- GitHub Actions: workflow run 38885192147, conclusion `success`, commit `1a7846442af23c6346b7d42bb6243051b228098c`.
-- The new batching module is **offline-only** and not wired to the bot. No Coinos transfer occurs.
-- The production royalty payment transport is explicitly disabled.
+- Copyright holder: **Paul**. Maintainer: https://github.com/Paulmeloux
+- Contact: **paulmeloux@proton.me**.
+- [LICENSE](../LICENSE) contains the approved source-available v1.0 terms;
+  licensing is no longer an unresolved draft.
+- Preserve original attribution and distinguish independent operators.
+- Royalty: `original_amount_sats // 1000` from the operator's commission,
+  payable separately per completed trade to **bitcoinisfreedombot@coinos.io**.
+- No batching. The previous batch design is superseded, not work to complete.
+- Immediate payment; technical faults must be reported and resolved within
+  72 hours of trade completion. No email per successful payment.
+- Overdue unresolved obligations stop new orders, never safe settlement or
+  refunds for existing users. This is the required behavior, not yet an
+  implemented 72-hour runtime feature.
+- No selected governing country or exclusive court. Ethical commitment does
+  not make license conditions optional.
+- Historical non-secret administrator/price-endpoint references are retained
+  by the owner's decision; no history rewrite is planned for those references.
 
-## Blocking items (do not merge or deploy)
+## Existing evidence
 
-1. **Database lifecycle integration:** current `create_batch` selects `DUE` obligations and creates batch items, but does not transition obligation statuses to `PAYING`. Batch states and obligation states must be synchronized transactionally. A completed batch must atomically mark all corresponding obligations `PAID`, and a crashed/ambiguous payment must remain `UNKNOWN` without re-sending. Add real-schema integration tests for all paths.
-2. **Remote exactly-once semantics:** confirm the Coinos deployed API contract, history fields, and whether an idempotency key exists. An ambiguous POST outcome must never trigger automatic retry. If the API cannot provide a reliable remote idempotency guarantee, require operator-confirmed reconciliation and a deliberately limited manual payout flow.
-3. **Accounting consistency:** verify no order is included in multiple batches; do not permit `ACCOUNTING_TEST` obligations to become payable; validate historical destination snapshots, sum invariants, operator commission funding, and concurrent workers.
-4. **Release/legal configuration:** choose the royalty destination kind and recipient, notice email, publisher identity, governing law, and review the source-available license. No recipient secret should be committed.
-5. **Operational readiness:** stage with mocked Coinos responses and simulated crashes; document backup/restore and dispute/refund behavior; review new-trade gate with batch `PREPARED`, `IN_FLIGHT`, `UNKNOWN`, and `CONFIRMED` states.
+At revision `805d2cc`, 44 current files and 67 ancestor commits (88 distinct
+file versions) were inspected. No live token or private key was found in
+the checks performed. No tracked user database, backup or private log was found.
+The current code has no books or BIFWallet integration. This is not a guarantee
+that all possible sensitive data or financial defects have been excluded.
 
-## Safety boundary
+Earlier Windows and CI runs passed. The latest inspected run for `805d2cc`,
+[39062777713](https://github.com/Paulmeloux/BIFp2p-public/actions/runs/39062777713),
+compiled successfully but failed **8 of 49 tests**. Old test fixtures still
+use a destination rejected by the fixed-recipient check; not all failures
+have been repaired or independently explained.
 
-This branch is a development prototype. CI success does **not** prove financial safety. Do not enable real royalty payments, merge to main, publish, or deploy before the blockers above are resolved and the operator explicitly approves.
+Paul reports successful operation of the original Telegram service. That
+separate deployment is outside this work and does not certify this branch.
+
+## Remaining source preparation
+
+1. Complete per-trade royalty payment integration and remove superseded
+   batch code/tests in a separately authorized implementation change.
+2. Resolve current test failures and verify the resulting revision.
+3. Finish the operator setup guide for credentials, wallet/payment adapter,
+   configuration and payment-incident handling.
+4. Review the final files and privacy findings, then obtain the owner's
+   express approval before merging or changing repository visibility.
+
+This documentation step does not change executable code, runtime settings,
+payment activation, branch protection, repository visibility or deployment.
+
+## Before independent operation with real funds
+
+- Verify the actual wallet's invoice resolution, payment API, fee behavior,
+  independent payment lookup and reliable proof of settlement.
+- Test one obligation/payment per trade, concurrency, crashes, restart,
+  unknown outcomes, refund handling and backup restoration without duplicate
+  transfers. Do not demand or implement a batch lifecycle.
+- Verify immediate payment, the 72-hour rule and operator incident reporting;
+  keep existing-trade safety paths available while new orders are paused.
+- Verify Coinos escrow/payout/refund/recovery behavior and operator configuration.
+
+Do not enable payment transport merely to clear a gate.
+Financial activation or live testing requires separate express authorization.
+
+## Work boundary
+
+Work remains on `dev/royalty-batching-reconciliation`; the historical branch
+name is not the payment policy. PR #1 remains a draft. No merge, publication,
+private-repository access, live payment or production-server change is authorized
+by completing this document.

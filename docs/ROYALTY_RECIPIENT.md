@@ -1,32 +1,75 @@
-# BIFp2p independent operator: royalty and original project identity
+# Independent operator: attribution and per-trade royalty
 
-Scope: the public source-available distribution only. The creator's private production bot, wallet, credentials, and server are out of scope and must not be changed.
+The governing terms are the [BIFp2p Source-Available License v1.0](../LICENSE).
+This guide summarizes them; the license controls if wording differs.
 
-## Original project and attribution
+## Original project and contact
 
-- Original project: **BIFp2p**, created under **Bitcoin Is Freedom**.
-- Original author and maintainer: **Paul**.
-- Original community: https://t.me/BitcoinIsFreedom
+- BIFp2p | Bitcoin Is Freedom | Created by Paul.
+- Copyright holder and original maintainer: **Paul**.
+- Maintainer: https://github.com/Paulmeloux
 - Canonical source: https://github.com/Paulmeloux/BIFp2p-public
+- Community: https://t.me/BitcoinIsFreedom
+- Developers, operators and payment incidents: **paulmeloux@proton.me**.
 
-Independent operators own and identify their own deployments, Telegram bots, support channels, infrastructure, and wallets. They must not claim to be the original author or imply official endorsement. The original project attribution must remain visible in source notices, the README, and the bot's `/about` command. No legal name is required in public attribution.
+Keep original attribution in the README, license, source notices and accessible
+`/about` command or equivalent view. Identify your own operator and support.
+Do not impersonate the original project or claim endorsement.
 
-## Per-trade royalty (no batching)
+## One completed trade, one royalty payment
 
-- For **each** successfully completed trade, royalty is **0.1% of the original trade amount**, rounded down to whole satoshis: `royalty_sats = original_amount_sats // 1000`.
-- Each trade has its **own obligation and payment**. Never aggregate royalties from multiple trades.
-- The royalty comes from the **operator's existing commission**; it is not added to the buyer's or seller's charges.
-- Cancelled, refunded, or unsuccessful trades owe no completed-trade royalty.
-- Fixed beneficiary: **bitcoinisfreedombot@coinos.io**. The beneficiary is not an operator-configurable address.
-- Operators may use **any suitable Lightning wallet**, not necessarily Coinos, provided it has a compatible authorized API/payment adapter. The operator is responsible for configuring wallet credentials, an invoice-resolution mechanism for the beneficiary's Lightning Address, and payment verification.
-- A wallet without programmatic payment support cannot be assumed to provide automatic payment. Operator action or a compatible adapter is required.
-- Each payment must be checked against the corresponding trade amount and recorded with an auditable result. A timeout or uncertain outcome must **not** be blindly retried or marked paid.
-- Wallet credentials and secrets must never be committed to the repository.
+- Amount: `original_amount_sats // 1000`, or 0.1% rounded down to whole sats.
+- Base: the original trade principal before operator fees.
+- Fixed beneficiary: **bitcoinisfreedombot@coinos.io**.
+- Each completed trade has a distinct obligation and a separate payment.
+  **No batching.** A zero-satoshi obligation requires no payment.
+- Pay from the operator's commission, without an additional trader charge.
+  The operator funds any shortfall and payment/network costs.
+- Cancelled, failed and refunded trades do not generate completed-trade
+  royalties. Never count one successful trade twice. For a later full refund,
+  follow the license's trade-specific correction procedure.
+- Retain the supplied royalty functions or an equivalent working implementation.
+  Do not change the beneficiary or bypass attribution/payment obligations.
 
-## Responsibility and current implementation status
+## Payment deadlines and incidents
 
-The public code currently calculates and stores a royalty obligation for completed trades. A wallet-neutral per-trade interface has been prototyped, but it is **not wired to an operational wallet adapter or automatic payment worker**. The former batching experiment is **not the intended royalty policy** and must not be used for a release. The last per-trade development commit did not pass CI at the time of this policy decision.
+Pay immediately after each trade completes. If a technical fault prevents
+payment, the debt remains due and must be resolved within **72 hours of trade
+completion**. Notify Paul without undue delay at **paulmeloux@proton.me** of
+payment faults, delays or unresolved outcomes.
 
-The independent operator is responsible for implementing and validating the compatible wallet/API connection and paying each trade's royalty. The software must not claim that an obligation was paid without reliable payment evidence. This policy is also subject to the eventual source-available license; the current LICENSE-DRAFT is not an approved final license.
+**No email is required for a successful payment.** Keep successful payment
+records locally. The notification requirement is an operator responsibility;
+automatic email is not implied or required by this guide.
 
-No live transfers, production configuration changes, or publication are authorized by this document.
+If an obligation remains unpaid or unresolved after 72 hours, stop creating
+and accepting new orders until overdue obligations are resolved. Continue
+existing settlements, refunds, disputes and recovery safely. Never block the
+return of user funds to enforce royalties.
+
+A timeout is not evidence of failure. Treat `UNKNOWN` as potentially successful,
+reconcile first, and never blindly repeat a transfer or mark an unverified
+payment `PAID`. The deadline must not cause duplicate payments.
+
+Keep minimal trade-to-payment evidence and provide redacted evidence on
+reasonable request. Reports must exclude user identities, bank details,
+tokens, seeds and keys.
+
+## Wallet and current code
+
+An operator may use any suitable Lightning wallet; it need not be Coinos.
+Coinos escrow for trades is separate from the royalty-paying wallet.
+
+The current public branch calculates and records obligations. The per-trade
+wallet interface is a prototype, not an integrated payment worker.
+`ROYALTY_PAYMENT_TRANSPORT_ENABLED = False` and `PRODUCTION_ENFORCED`
+currently blocks new orders. The license's 72-hour rule and incident procedure
+are requirements to implement and verify, not completed runtime features.
+
+The former batching experiment is superseded. Its remaining code and tests
+are not a supported payment path and must not be enabled or integrated.
+They will be addressed in the separate implementation step.
+
+The original private production service, its wallet, credentials and server
+are outside this distribution's change scope. This document does not
+authorize live transfers, deployment, merging or publication.
